@@ -2,11 +2,13 @@
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Slaughter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Creepster&family=Special+Elite&family=Cinzel:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#000;--fg:#eee;--accent:#c33;--panel:#1b1b1b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#000;--fg:#eee;--panel:#1b1b1b}}
 :root[data-theme="dark"]{--bg:#000;--fg:#eee;--panel:#1b1b1b}
-html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:system-ui,sans-serif;overflow:hidden}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:'Special Elite','Courier New',monospace;overflow:hidden}
 canvas{display:block;width:100%;height:100%}
 #hud{position:absolute;top:8px;left:12px;font-size:15px;text-shadow:0 0 4px #000;pointer-events:none;line-height:1.5}
 #msg{position:absolute;bottom:18%;width:100%;text-align:center;font-size:18px;pointer-events:none;text-shadow:0 0 6px #000}
@@ -14,17 +16,18 @@ canvas{display:block;width:100%;height:100%}
 #barf{display:block;height:100%;width:100%;background:#4c8}
 #ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.85);overflow:auto}
 .box{background:var(--panel);border:2px solid var(--accent);border-radius:12px;padding:20px;max-width:460px;width:88%;text-align:center}
-.box h1{color:var(--accent);margin:8px 0;letter-spacing:4px;font-size:40px}
+.box h1{font-family:Creepster,Impact,fantasy;font-weight:400;color:var(--accent);margin:8px 0;letter-spacing:6px;font-size:56px;text-shadow:0 0 18px #800}.box h3{font-family:Cinzel,Georgia,serif;font-size:20px;line-height:1.35}
 .face{width:150px;height:200px;object-fit:cover;border-radius:50%;border:4px solid var(--accent);box-shadow:0 0 30px #c33}
-button{display:block;width:100%;margin:8px 0;padding:10px;font-size:16px;border-radius:8px;border:1px solid #555;background:#2a2a2a;color:var(--fg);cursor:pointer}
+button{font-family:'Cinzel',Georgia,serif;font-weight:700;display:block;width:100%;margin:8px 0;padding:10px;font-size:16px;border-radius:8px;border:1px solid #555;background:#2a2a2a;color:var(--fg);cursor:pointer}
 button:hover{background:#3a3a3a}.play{background:var(--accent);font-size:22px;font-weight:bold}
 #js{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#300;z-index:9}
 #js img{height:100%;max-width:100%;object-fit:contain;animation:z .5s ease-out forwards,sh .08s infinite}
 @keyframes z{from{transform:scale(.2)}to{transform:scale(1.5)}}
 @keyframes sh{0%{margin:0}25%{margin:-14px 10px}50%{margin:12px -12px}75%{margin:-8px -10px}}
+#clock{position:absolute;top:8px;right:14px;text-align:right;text-shadow:0 0 6px #000;pointer-events:none}#eye{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;z-index:7}#dayTxt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Creepster,Impact,fantasy;font-size:46px;letter-spacing:3px;color:#d9c9a3;opacity:0;z-index:8;pointer-events:none;text-shadow:0 0 14px #800;text-align:center}
 </style></head><body>
 <canvas id="c"></canvas><div id="hud"></div><div id="msg"></div><div id="bar"><i id="barf"></i></div>
-<div id="ov"><div class="box" id="box"></div></div><div id="js"><img id="jimg"></div>
+<div id="clock"></div><div id="eye"></div><div id="dayTxt"></div><div id="ov"><div class="box" id="box"></div></div><div id="js"><img id="jimg"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 // ====== EDIT YOUR QUESTIONS HERE ======  (c = 0-based index of the correct answer in a[])
@@ -57,12 +60,12 @@ const R=new THREE.WebGLRenderer({canvas:$('c'),antialias:true});
 const S=new THREE.Scene();S.background=new THREE.Color(0x070a14);S.fog=new THREE.FogExp2(0x070a14,.05);
 const cam=new THREE.PerspectiveCamera(70,1,.1,90);S.add(cam);
 function rs(){R.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()}addEventListener('resize',rs);rs();
-S.add(new THREE.AmbientLight(0x505068,.75));cam.add(new THREE.PointLight(0xffe2a8,1,16));
+const amb=new THREE.AmbientLight(0x505068,.75);S.add(amb);cam.add(new THREE.PointLight(0xffe2a8,1,16));
 const moon=new THREE.DirectionalLight(0x6677aa,.25);moon.position.set(-10,30,10);S.add(moon);
 const Mt=c=>new THREE.MeshLambertMaterial({color:c}),Bm=c=>new THREE.MeshBasicMaterial({color:c});
 function tex(w,h,draw,rx,ry){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'));const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rx,ry);return t}
 const planks=g=>{for(let i=0;i<8;i++){g.fillStyle='hsl(28,'+(35+Math.random()*10)+'%,'+(20+Math.random()*8)+'%)';g.fillRect(0,i*32,256,31);g.fillStyle='#120a05';g.fillRect(0,i*32+31,256,1)}};
-const floorMat=new THREE.MeshLambertMaterial({map:tex(256,256,planks,.25,.25),side:THREE.DoubleSide});
+const floorMat=new THREE.MeshLambertMaterial({map:tex(256,256,planks,.25,.25)});
 const wallTex=tex(128,128,g=>{g.fillStyle='#5b4a3c';g.fillRect(0,0,128,128);for(let x=0;x<128;x+=16){g.fillStyle='#6b5846';g.fillRect(x,0,8,128)}g.fillStyle='#2e2016';g.fillRect(0,112,128,16)},6,1);
 const wm=new THREE.MeshLambertMaterial({map:wallTex});
 const concrete=new THREE.MeshLambertMaterial({map:tex(64,64,g=>{g.fillStyle='#4a4a4a';g.fillRect(0,0,64,64);for(let i=0;i<60;i++){g.fillStyle='rgba(0,0,0,.15)';g.fillRect(Math.random()*64,Math.random()*64,3,3)}},8,1)});
@@ -71,14 +74,16 @@ function plate(mat,y,holes,flip){const sh=new THREE.Shape();sh.moveTo(-20,-20);s
 holes.forEach(h=>{const p=new THREE.Path();p.moveTo(h[0],-h[3]);p.lineTo(h[2],-h[3]);p.lineTo(h[2],-h[1]);p.lineTo(h[0],-h[1]);sh.holes.push(p)});
 const m=new THREE.Mesh(new THREE.ShapeGeometry(sh),mat);m.rotation.x=-Math.PI/2;m.position.y=y;S.add(m);return m}
 const UP=[14.8,8,17.7,16],DN=[-4.6,9,-1.5,17];
-plate(floorMat,0,[DN]);plate(new THREE.MeshLambertMaterial({color:0x4a3524,side:THREE.DoubleSide}),FH,[UP]);
-plate(new THREE.MeshLambertMaterial({color:0x2a2018,side:THREE.DoubleSide}),FH*2,[]);
+// one plaster-ceiling texture for every ceiling (BackSide = only seen from below, so no z-fighting with floors)
+const ceilTex=tex(256,256,g=>{g.fillStyle='#8a7e68';g.fillRect(0,0,256,256);for(let i=0;i<50;i++){g.fillStyle='rgba(50,38,26,'+(Math.random()*.1)+')';g.beginPath();g.arc(Math.random()*256,Math.random()*256,8+Math.random()*30,0,7);g.fill()}g.strokeStyle='rgba(40,30,20,.4)';g.lineWidth=4;g.strokeRect(0,0,256,256);g.strokeStyle='rgba(40,30,20,.18)';g.lineWidth=2;g.strokeRect(64,64,128,128)},.2,.2);
+const ceilMat=new THREE.MeshLambertMaterial({map:ceilTex,side:THREE.BackSide});
+plate(floorMat,0,[DN]);plate(ceilMat,-.01,[DN]);plate(floorMat,FH+.01,[UP]);plate(ceilMat,FH-.01,[UP]);plate(ceilMat,FH*2,[]);
 const bs=plate(concrete,-FH,[]);
 function ground(w,d,x,z,y,c){const m=new THREE.Mesh(new THREE.PlaneGeometry(w,d),Mt(c));m.rotation.x=-Math.PI/2;m.position.set(x,y,z);S.add(m)}
 ground(120,30,0,-35,-.03,0x1a3a1a);ground(30,60,-35,0,-.03,0x1a3a1a);ground(40,60,50,0,-FH-.03,0x16301a);ground(14,40,27,0,-FH,0x1d3f1d);
 // collision + walls
 const W=[];let CUR=0;
-function wall(x1,z1,x2,z2,lv,m){W.push([x1,z1,x2,z2,lv]);const b=new THREE.Mesh(new THREE.BoxGeometry(x2-x1,3,z2-z1),m||(lv<0?concrete:wm));b.position.set((x1+x2)/2,lv*FH+1.5,(z1+z2)/2);S.add(b)}
+function wall(x1,z1,x2,z2,lv,m){W.push([x1,z1,x2,z2,lv]);const b=new THREE.Mesh(new THREE.BoxGeometry(x2-x1,FH,z2-z1),m||(lv<0?concrete:wm));b.position.set((x1+x2)/2,lv*FH+FH/2,(z1+z2)/2);S.add(b)}
 function hit(x,z,r,lv){for(const w of W)if((w[4]===lv||w[4]===2)&&x>w[0]-r&&x<w[2]+r&&z>w[1]-r&&z<w[3]+r)return true;return false}
 function los(a,b,lv){for(let i=1;i<20;i++){const t=i/20;if(hit(a.x+(b.x-a.x)*t,a.z+(b.z-a.z)*t,.05,lv))return false}return true}
 // ground floor shell
@@ -105,8 +110,8 @@ const exitW=[-1.2,-20.3,1.2,-20,0],backW=[20,11,20.3,13.4,-1],winW=[-20.3,-11,-2
 function F(x1,z1,x2,z2,h,col,solid=true,y0=0){const m=new THREE.Mesh(new THREE.BoxGeometry(x2-x1,h,z2-z1),typeof col==='number'?Mt(col):col);m.position.set((x1+x2)/2,y0+CUR*FH+h/2,(z1+z2)/2);S.add(m);if(solid)W.push([x1,z1,x2,z2,CUR]);return m}
 function cyl(x,z,r,h,col,y0=0,seg=12){const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,seg),Mt(col));m.position.set(x,y0+CUR*FH+h/2,z);S.add(m);return m}
 function rug(x,z,w,d,col){const m=new THREE.Mesh(new THREE.PlaneGeometry(w,d),Mt(col));m.rotation.x=-Math.PI/2;m.position.set(x,CUR*FH+.03,z);S.add(m)}
-function lamp(x,z){const b=new THREE.Mesh(new THREE.BoxGeometry(.6,.15,.6),Bm(0xffe9b0));b.position.set(x,CUR*FH+2.9,z);S.add(b);const l=new THREE.PointLight(0xffcc88,.55,12);l.position.set(x,CUR*FH+2.5,z);S.add(l)}
-function pic(x,y,z,ry,w,h,col,basic){const g=new THREE.Mesh(new THREE.BoxGeometry(w,h,.08),basic?Bm(col):Mt(col));g.position.set(x,CUR*FH+y,z);g.rotation.y=ry;S.add(g)}
+function lamp(x,z){const y=CUR*FH;const d=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,.05,18),Mt(0x6a5a3a));d.position.set(x,y+FH-.04,z);S.add(d);const c=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,.25,6),Mt(0x333333));c.position.set(x,y+FH-.17,z);S.add(c);const sh=new THREE.Mesh(new THREE.ConeGeometry(.38,.3,16,1,true),new THREE.MeshLambertMaterial({color:0xc9b88a,side:THREE.DoubleSide}));sh.position.set(x,y+FH-.38,z);S.add(sh);const b=new THREE.Mesh(new THREE.SphereGeometry(.14,10,10),Bm(0xffeebb));b.position.set(x,y+FH-.4,z);S.add(b);const l=new THREE.PointLight(0xffcc88,.55,12);l.position.set(x,y+FH-.7,z);S.add(l)}
+const winMeshes=[];function pic(x,y,z,ry,w,h,col,basic){const g=new THREE.Mesh(new THREE.BoxGeometry(w,h,.08),basic?Bm(col):Mt(col));g.position.set(x,CUR*FH+y,z);g.rotation.y=ry;S.add(g);if(basic)winMeshes.push(g)}
 function plant(x,z){cyl(x,z,.25,.4,0x8a4a2a);const m=new THREE.Mesh(new THREE.SphereGeometry(.45,8,8),Mt(0x2a6a2a));m.position.set(x,CUR*FH+.85,z);S.add(m)}
 function shelf(x1,z1,x2,z2,h,col){F(x1,z1,x2,z2,h,col);for(let y=.5;y<h;y+=.5)F(x1-.03,z1-.03,x2+.03,z2+.03,.05,0x2a1a0a,false,y);
 const n=Math.floor(Math.max(x2-x1,z2-z1)/.35);for(let i=0;i<n;i++){const c=[0x8a2a2a,0x2a4a8a,0x2a7a3a,0xb09030][i%4],bx=x2-x1>z2-z1;F(bx?x1+.1+i*.35:x1,bx?z1:z1+.1+i*.35,bx?x1+.3+i*.35:x2,bx?z2:z1+.3+i*.35,.3,c,false,h)}}
@@ -135,7 +140,7 @@ F(-2.4,-23,2.4,-20.3,.2,0x3a2616,false,3.1);F(-2.4,-23,-2.2,-22.8,3.1,0x3a2616,f
 const pl=new THREE.PointLight(0xffbb66,.7,9);pl.position.set(0,2.8,-21.5);S.add(pl);
 // west window (escape route): frame, glass, curtains, sill
 F(-20.4,-11.15,-19.7,-8.85,.3,0x3a2616,false,2.3);F(-20.4,-11.15,-19.7,-8.85,.9,0x6b5846,false);F(-20.4,-11.15,-19.8,-10.95,1.4,0x3a2616,false,.9);F(-20.4,-9.05,-19.8,-8.85,1.4,0x3a2616,false,.9);
-const winG=new THREE.Group();const gm=new THREE.Mesh(new THREE.BoxGeometry(.05,1.4,2),new THREE.MeshBasicMaterial({color:0x7aa0cc,transparent:true,opacity:.35}));gm.position.set(-20.15,1.6,-10);winG.add(gm);
+const winG=new THREE.Group();const gm=new THREE.Mesh(new THREE.BoxGeometry(.05,1.4,2),new THREE.MeshBasicMaterial({color:0x7aa0cc,transparent:true,opacity:.35}));gm.position.set(-20.15,1.6,-10);winG.add(gm);winMeshes.push(gm);
 const mu=new THREE.Mesh(new THREE.BoxGeometry(.08,1.4,.06),Mt(0x3a2616));mu.position.set(-20.12,1.6,-10);winG.add(mu);const mh=new THREE.Mesh(new THREE.BoxGeometry(.08,.06,2),Mt(0x3a2616));mh.position.set(-20.12,1.6,-10);winG.add(mh);
 const latch=new THREE.Mesh(new THREE.BoxGeometry(.12,.1,.25),Bm(0xd4af37));latch.position.set(-20.05,1.0,-10);winG.add(latch);S.add(winG);
 F(-19.85,-11.3,-19.65,-10.5,2.1,0x8a2a3a,false,.2);F(-19.85,-9.5,-19.65,-8.7,2.1,0x8a2a3a,false,.2);F(-19.9,-11.4,-19.6,-8.6,.06,0x3a2616,false,2.35);
@@ -170,10 +175,15 @@ F(25.95,6.9,26.1,7.1,2,0x5a3a22,false);F(27.9,6.9,28.05,7.1,2,0x5a3a22,false);co
 F(26,14.5,26.15,17.5,2,0xcc4444);F(28.85,14.5,29,17.5,2,0xcc4444);F(26,17.35,29,17.5,2,0xcc4444);F(26,14.5,26.7,14.6,2,0xcc4444,false);F(28.3,14.5,29,14.6,2,0xcc4444,false);
 const pr=new THREE.Mesh(new THREE.ConeGeometry(2.6,1.3,4),Mt(0x3a5acc));pr.position.set(27.5,-FH+2.65,16);pr.rotation.y=.78;S.add(pr);F(26.2,16,27,17,.5,0xeeeecc,false);hides.push({x:27.5,z:16,lv:-1});
 const yl=new THREE.PointLight(0x99aaff,.6,14);yl.position.set(27,-FH+3,11);S.add(yl);
-const moonB=new THREE.Mesh(new THREE.SphereGeometry(2,16,16),Bm(0xeeeeff));moonB.position.set(-30,35,-40);S.add(moonB);
+const moonB=new THREE.Mesh(new THREE.SphereGeometry(2,16,16),Bm(0xeeeeff));moonB.material.fog=false;moonB.scale.setScalar(2.2);moonB.position.set(-30,35,-40);S.add(moonB);
 CUR=0;
 // trees
 [[-26,-6],[-27,12],[-10,-27],[12,-29],[28,-27]].forEach(t=>{cyl(t[0],t[1],.35,2.4,0x4a3020);const c=new THREE.Mesh(new THREE.ConeGeometry(1.8,3.5,8),Mt(0x143a14));c.position.set(t[0],4,t[1]);S.add(c)});
+// wall clock shows the in-game time
+CUR=0;const clk=new THREE.Mesh(new THREE.CircleGeometry(.45,24),Bm(0xf0e8d0));clk.position.set(-7.5,2.3,-19.85);S.add(clk);
+const rim=new THREE.Mesh(new THREE.RingGeometry(.45,.53,24),Bm(0x3a2616));rim.position.copy(clk.position);S.add(rim);
+const hH=new THREE.Mesh(new THREE.BoxGeometry(.05,.24,.02).translate(0,.12,0),Bm(0x111111)),mH=new THREE.Mesh(new THREE.BoxGeometry(.03,.36,.02).translate(0,.18,0),Bm(0x111111));
+hH.position.set(-7.5,2.3,-19.82);mH.position.set(-7.5,2.3,-19.8);S.add(hH,mH);
 // keys (on shelves & furniture): [x,z,lv,y]
 const spots=[[-16.2,-9.1,0,1.35],[-19.2,18,0,1.35],[6,-19.4,1,2.75],[0.5,19.4,1,1.55],[-17,-19.3,-1,2.55],[10,-19.3,-1,2.55]];
 const cols=[0xffd400,0x00e0ff,0xff55cc,0x66ff66,0xff8800,0xffffff];
@@ -200,6 +210,7 @@ const sl={x:-12,z:-12,y:0,lv:0,mode:'patrol',wp:0,dir:1,alert:0,dead:0};
 const sp={x:16,z:-8,wp:0,dir:1,mode:'patrol',alert:0,dead:0};
 const route=[[-12,-12],[-5.5,-5],[0,0],[4.5,7],[10,14],[16.3,16.8],[16.3,7],[16.3,4],[-7.6,4],[-7.6,-8],[8,-8],[16,-8]];
 const sroute=[[16,-8],[-7.6,-8],[-7.6,4],[8,4]];
+let gt=7*3600,lastH=7,tk=0,NM=1;const ac={x:0,y:0,z:0,pitch:0,roll:0},anim={k:null,e:0,dur:0,txt:'',sub:''};
 let got=0,day=1,paused=true,over=false,hidden=null,qi=0,qs=[],keys={},near=null,sta=100,exh=0,swCD=0,swT=0,hb=0;
 qs=QUESTIONS.map((_,i)=>i).sort(()=>Math.random()-.5);
 function say(t,ms=2500){$('msg').textContent=t;setTimeout(()=>{if($('msg').textContent===t)$('msg').textContent=''},ms)}
@@ -214,10 +225,13 @@ function plink(){const n=[220,233.1,261.6,277.2,311.1,349.2,415.3],f=n[Math.floo
 function thump(){if(!AC)return;const o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime;o.frequency.setValueAtTime(70,t);o.frequency.exponentialRampToValueAtTime(35,t+.2);g.gain.setValueAtTime(.7,t);g.gain.exponentialRampToValueAtTime(.001,t+.25);o.connect(g);g.connect(master);o.start(t);o.stop(t+.3)}
 function scream(){if(!AC)return;const t=AC.currentTime,o=AC.createOscillator();o.type='sawtooth';o.frequency.setValueAtTime(900,t);o.frequency.exponentialRampToValueAtTime(260,t+1.2);const g=AC.createGain();g.gain.setValueAtTime(.9,t);g.gain.exponentialRampToValueAtTime(.001,t+1.4);o.connect(g);g.connect(master);o.start(t);o.stop(t+1.4);
 const b=AC.createBuffer(1,AC.sampleRate*1.2,AC.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);const n=AC.createBufferSource();n.buffer=b;const ng=AC.createGain();ng.gain.value=.8;n.connect(ng);ng.connect(master);n.start(t)}
+function tick(){if(!AC||paused)return;const o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime;o.type='square';o.frequency.value=1500;g.gain.setValueAtTime(.025,t);g.gain.exponentialRampToValueAtTime(.001,t+.03);o.connect(g);g.connect(master);o.start(t);o.stop(t+.04)}
+function bell(){if(!AC)return;const t=AC.currentTime;[196,294,392].forEach((f,i)=>{const o=AC.createOscillator(),g=AC.createGain();o.frequency.value=f;g.gain.setValueAtTime(.18/(i+1),t);g.gain.exponentialRampToValueAtTime(.001,t+2.4);o.connect(g);g.connect(master);o.start(t);o.stop(t+2.5)})}
+function chime(n){for(let i=0;i<n;i++)setTimeout(bell,i*1100)}
 // ---- UI ----
 function screen(h){$('box').innerHTML=h;$('ov').style.display='flex';paused=true}
-function start(){audio();if(AC&&AC.state==='suspended')AC.resume();$('ov').style.display='none';paused=false;try{$('c').requestPointerLock()}catch(e){}}window.start=start;
-function menu(){screen(`<img class="face" src="${FACE}"><h1>${NAME.toUpperCase()}</h1><p>Escape ${NAME}'s house in ${DAYS} days. Find keys (each one asks a question), then pick your way out:<br><b>Window</b> ${NEED.window} keys · <b>Basement back door</b> ${NEED.back} keys · <b>Front door</b> ${NEED.front} keys.<br>Beware ${NAME} and ${SPIDER} the spider upstairs!</p><button class="play" onclick="start()">▶ PLAY</button><p style="font-size:13px;opacity:.8"><b>WASD</b> move · <b>Shift</b> sprint · <b>Arrows/drag</b> look · <b>E</b> pick up / hide / open · <b>F</b> swing frying pan (knocks enemies out for 60s) · <b>M</b> mute</p>`)}
+function start(){audio();if(AC&&AC.state==='suspended')AC.resume();$('ov').style.display='none';paused=false;try{$('c').requestPointerLock()}catch(e){}}window.start=start;window.begin=()=>{startDay();start()};
+function menu(){screen(`<img class="face" src="${FACE}"><h1>${NAME.toUpperCase()}</h1><p>Escape ${NAME}'s house in ${DAYS} days. Find keys (each one asks a question), then pick your way out:<br><b>Window</b> ${NEED.window} keys · <b>Basement back door</b> ${NEED.back} keys · <b>Front door</b> ${NEED.front} keys.<br>Beware ${NAME} and ${SPIDER} the spider upstairs!</p><button class="play" onclick="begin()">▶ PLAY</button><p style="font-size:13px;opacity:.8"><b>WASD</b> move · <b>Shift</b> sprint · <b>Arrows/drag</b> look · <b>E</b> pick up / hide / open · <b>F</b> swing frying pan (knocks enemies out for 60s) · <b>M</b> mute</p>`)}
 menu();
 function ask(it){const q=QUESTIONS[qs[qi++%qs.length]];paused=true;if(document.exitPointerLock)document.exitPointerLock();
 screen(`<h3>${q.q}</h3><p style="margin:0;opacity:.7">To take the ${KEYS[it.i]}</p>`+q.a.map((t,i)=>`<button onclick="ans(${i},${q.c},${it.i})">${t}</button>`).join(''))}
@@ -240,16 +254,35 @@ addEventListener('keyup',e=>keys[e.code]=0);
 let drag=0;$('c').addEventListener('mousedown',()=>drag=1);addEventListener('mouseup',()=>drag=0);
 addEventListener('mousemove',e=>{if(paused)return;if(drag||document.pointerLockElement===$('c')){P.yaw-=e.movementX*.003;P.pitch=Math.max(-1,Math.min(1,P.pitch-e.movementY*.003))}});
 function end(win){over=true;if(document.exitPointerLock)document.exitPointerLock();screen(win?`<h1 style="color:#4c4;font-size:30px">YOU ESCAPED!</h1><p>You got out of ${NAME}'s house on day ${day}!</p><button class="play" onclick="location.reload()">Play again</button>`:`<img class="face" src="${FACE}"><h1 style="font-size:28px">${NAME.toUpperCase()} GOT YOU</h1><p>You ran out of days.</p><button class="play" onclick="location.reload()">Try again</button>`)}
-function scare(by){paused=true;$('jimg').src=by===NAME?FACE:FACE2;$('js').style.display='flex';scream();setTimeout(()=>{$('js').style.display='none';day++;if(day>DAYS)end(false);else{reset();paused=false;say(by+' caught you! Day '+day+' of '+DAYS,3500)}},1500)}
+function scare(by){paused=true;$('jimg').src=by===NAME?FACE:FACE2;$('js').style.display='flex';scream();setTimeout(()=>{$('js').style.display='none';day++;if(day>DAYS)end(false);else{paused=false;startDay(by)}},1500)}
 function step(x,z,dx,dz,r,lv){if(!hit(x+dx,z,r,lv))x+=dx;if(!hit(x,z+dz,r,lv))z+=dz;return[x,z]}
 function lvOf(o){const h=stairH(o.x,o.z);if(h!=null){o.y=h;o.lv=h>FH/2?1:0;return}const d=downH(o.x,o.z);if(d!=null){o.y=d;o.lv=d<-FH/2?-1:0;return}o.y=o.lv*FH}
 function patrol(o,rt){const w=rt[o.wp];if(Math.hypot(w[0]-o.x,w[1]-o.z)<.7){o.wp+=o.dir;if(o.wp>=rt.length||o.wp<0){o.dir*=-1;o.wp+=2*o.dir}}return w}
 function move(o,tx,tz,spd,dt,lv,r){const l=Math.hypot(tx-o.x,tz-o.z)||1;[o.x,o.z]=step(o.x,o.z,(tx-o.x)/l*spd*dt,(tz-o.z)/l*spd*dt,r,lv)}
 function chaseT(o){if(stairH(o.x,o.z)!=null)return P.y>o.y?[16.3,7]:[16.3,16.8];if(downH(o.x,o.z)!=null)return P.y<o.y?[-3.05,17.6]:[-3.05,8];
 if(o.lv===0)return P.lv===1?[16.3,16.8]:[-3.05,8];if(o.lv===1)return[16.3,7];return[-3.05,17.6]}
+function lerpP(e,p){if(e<=p[0][0])return p[0][1];for(let i=1;i<p.length;i++)if(e<=p[i][0]){const a=p[i-1],b=p[i];return a[1]+(b[1]-a[1])*(e-a[0])/(b[0]-a[0])}return p[p.length-1][1]}
+function startDay(by){reset();P.x=-18.4;P.z=10;P.lv=0;P.y=0;P.yaw=-Math.PI/2;P.pitch=0;gt=7*3600;lastH=7;anim.k='wake';anim.e=0;anim.dur=6;anim.txt='DAY '+Math.min(day,DAYS)+' — 7:00 AM';anim.sub=by?by+' dragged you back to bed...':'You wake up in your bed. Time to escape.'}
+function sleepNow(){if(anim.k)return;hidden=null;anim.k='sleep';anim.e=0;anim.dur=4.2;anim.txt='10:00 PM';anim.sub='You go back to sleep... Day '+day+' is over.'}
+function animStep(dt){anim.e+=dt;const e=anim.e;let eo,to;
+if(anim.k==='wake'){eo=lerpP(e,[[0,1],[1.1,1],[1.5,.55],[1.8,.95],[2.4,.15],[3.2,0]]);to=lerpP(e,[[0,0],[.5,1],[3.6,1],[5.2,0]]);
+ const k=Math.min(1,Math.max(0,(e-2.6)/2.6)),z=k*k*(3-2*k);ac.x=-18.4+z*2.4;ac.y=.95+z*.65;ac.z=10;ac.pitch=1.25*(1-z);ac.roll=Math.sin(e*1.3)*.05*(1-z);
+ if(e>=anim.dur){anim.k=null;P.x=-16;P.z=10;P.pitch=0;eo=0;to=0}}
+else{eo=lerpP(e,[[0,0],[2,1],[9,1]]);to=lerpP(e,[[0,0],[.8,1],[4,1]]);if(e>=anim.dur){anim.k=null;day++;if(day>DAYS){end(false)}else startDay()}}
+$('eye').style.opacity=eo;$('dayTxt').style.opacity=to;$('dayTxt').innerHTML=anim.txt+'<div style="font-family:\'Special Elite\',monospace;font-size:18px;margin-top:10px;letter-spacing:1px">'+anim.sub+'</div>'}
+const skyC=new THREE.Color(),tmpC=new THREE.Color(),wc=new THREE.Color();
+function sky(){const h=gt/3600,sun=Math.max(0,Math.sin(Math.PI*(h-6)/13));NM=1+.3*(1-sun);
+skyC.set(0x070a14).lerp(tmpC.set(0x6f95b8),sun*.8);S.background=skyC;S.fog.color.copy(skyC);S.fog.density=.05-.02*sun;amb.intensity=.6+.45*sun;moon.intensity=.2+.5*sun;
+const a=Math.PI*(h-6)/16;moonB.position.set(-Math.cos(a)*55,6+Math.sin(a)*45,-48);moonB.material.color.set(h<18.7?0xfff0a0:0xeeeeff);
+wc.set(0x16224a).lerp(tmpC.set(0xa8d0f0),sun);winMeshes.forEach(m=>m.material.color.copy(wc))}
+function fmt(g){const h=Math.floor(g/3600)%24,m=Math.floor(g/60)%60,s=Math.floor(g)%60;return(h%12||12)+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+' '+(h>=12?'PM':'AM')}
+function phase(h){return h<12?'Morning':h<17?'Afternoon':h<20?'Evening':'Night'}
 let last=performance.now();
 function loop(t){requestAnimationFrame(loop);const dt=Math.min((t-last)/1000,.05);last=t;
 if(!paused&&!over){
+ if(anim.k){animStep(dt)}else{
+ gt+=dt*20;const hn=Math.floor(gt/3600);if(hn!==lastH){lastH=hn;chime(hn%12||12);const ev={12:'12:00 PM — Noon.',17:'5:00 PM — The sun is setting...',20:'8:00 PM — Night falls. '+NAME+' grows restless.',21:'9:00 PM — One hour until bedtime.'}[hn];if(ev)say(ev,4000)}
+ tk+=dt;if(tk>=1){tk-=1;tick()}if(gt>=22*3600)sleepNow();
  if(keys.ArrowLeft)P.yaw+=1.8*dt;if(keys.ArrowRight)P.yaw-=1.8*dt;if(keys.ArrowUp)P.pitch=Math.min(1,P.pitch+dt);if(keys.ArrowDown)P.pitch=Math.max(-1,P.pitch-dt);
  swCD-=dt;if(swT>0)swT-=dt;wp.rotation.x=swT>0?-Math.sin((.3-swT)/.3*Math.PI)*1.4:0;
  const sl0=Math.hypot(P.x-sl.x,P.z-sl.z);
@@ -267,9 +300,9 @@ if(!paused&&!over){
  if(sl.alert>0){sl.alert-=dt;sl.mode='chase'}else if(same&&d<11&&!hidden&&los(sl,P,sl.lv)){sl.mode='chase';sl.alert=2}else sl.mode='patrol';
  if(hidden&&sl.alert>0&&d>3)sl.alert=Math.min(sl.alert,1.5);
  let tx,tz,spd;
- if(sl.mode==='chase'){spd=3.1;if(same){tx=P.x;tz=P.z}else{const c=chaseT(sl);tx=c[0];tz=c[1]}}
- else if(sl.lv===-1||downH(sl.x,sl.z)!=null){const c=downH(sl.x,sl.z)!=null?[-3.05,8]:[-3.05,17.6];tx=c[0];tz=c[1];spd=2}
- else{const w=patrol(sl,route);tx=w[0];tz=w[1];spd=1.6}
+ if(sl.mode==='chase'){spd=3.1*NM;if(same){tx=P.x;tz=P.z}else{const c=chaseT(sl);tx=c[0];tz=c[1]}}
+ else if(sl.lv===-1||downH(sl.x,sl.z)!=null){const c=downH(sl.x,sl.z)!=null?[-3.05,8]:[-3.05,17.6];tx=c[0];tz=c[1];spd=2*NM}
+ else{const w=patrol(sl,route);tx=w[0];tz=w[1];spd=1.6*NM}
  move(sl,tx,tz,spd,dt,sl.lv,.5);lvOf(sl);G.position.set(sl.x,sl.y,sl.z);G.rotation.y=Math.atan2(tx-sl.x,tz-sl.z);bat.rotation.x=Math.sin(t/150)*(sl.mode==='chase'?.6:.1);
  if(sl.mode==='chase'&&same)chasing=true;
  if(same&&d<(hidden?1.2:1.1)){scare(NAME);return}}
@@ -277,7 +310,7 @@ if(!paused&&!over){
  if(sp.dead>0){sp.dead-=dt;if(sp.dead<=0){sp.dead=0;SP.visible=true;sp.x=16;sp.z=-8;sp.wp=0;sp.dir=1;sp.alert=0;say(SPIDER+' is back!')}}
  else{const ds=Math.hypot(P.x-sp.x,P.z-sp.z),sa=P.lv===1;
  if(sp.alert>0&&sa){sp.alert-=dt;sp.mode='chase'}else if(sa&&ds<9&&!hidden&&los(sp,P,1)){sp.mode='chase';sp.alert=1.5}else sp.mode='patrol';
- let sx,sz,ss;if(sp.mode==='chase'){sx=P.x;sz=P.z;ss=3.6;chasing=true}else{const w=patrol(sp,sroute);sx=w[0];sz=w[1];ss=2}
+ let sx,sz,ss;if(sp.mode==='chase'){sx=P.x;sz=P.z;ss=3.6*NM;chasing=true}else{const w=patrol(sp,sroute);sx=w[0];sz=w[1];ss=2*NM}
  move(sp,sx,sz,ss,dt,1,.4);SP.position.set(sp.x,FH,sp.z);SP.rotation.y=Math.atan2(sx-sp.x,sz-sp.z);
  if(sa&&ds<.9&&!hidden){scare(SPIDER);return}}
  if(chasing){hb-=dt;if(hb<=0){thump();hb=.6}}
@@ -289,10 +322,12 @@ if(!paused&&!over){
  const m=$('msg');const hint=hidden?'':near?'Press E to pick up':hides.some(h=>h.lv===P.lv&&Math.hypot(h.x-P.x,h.z-P.z)<1.8)?'Press E to hide':'';
  if(hint)m.textContent=hint;else if(/^Press E to (pick|hide)/.test(m.textContent))m.textContent='';
  if(open.front&&P.z<-21.5||winOpen&&P.x<-21.5||open.back&&P.x>33.3)end(true);
-}
-cam.position.set(P.x,P.y+(hidden?1.2:1.6),P.z);cam.rotation.set(P.pitch,P.yaw,0,'YXZ');
+ }}
+if(anim.k==='wake'){cam.position.set(ac.x,ac.y,ac.z);cam.rotation.set(ac.pitch,P.yaw,ac.roll,'YXZ')}else{cam.position.set(P.x,P.y+(hidden?1.2:1.6),P.z);cam.rotation.set(P.pitch,P.yaw,0,'YXZ')}
 $('barf').style.width=sta+'%';$('barf').style.background=exh>0?'#c33':'#4c8';
-$('hud').innerHTML=`Day ${Math.min(day,DAYS)}/${DAYS} · Keys ${got}/${TOTAL} · ${['Basement','Ground floor','Upstairs'][P.lv+1]}`+(exh>0?` · <b style="color:#f88">Exhausted ${Math.ceil(exh)}s</b>`:'')+(sl.dead>0?`<br>${NAME} respawns in ${Math.ceil(sl.dead)}s`:'')+(sp.dead>0?`<br>${SPIDER} respawns in ${Math.ceil(sp.dead)}s`:'')+(sl.mode==='chase'&&sl.dead<=0?'<br><b style="color:#f55">'+NAME+' is hunting you!</b>':'')+(sp.mode==='chase'&&sp.dead<=0&&P.lv===1?'<br><b style="color:#f55">'+SPIDER+'!</b>':'');
+$('hud').innerHTML=`Keys ${got}/${TOTAL} · ${['Basement','Ground floor','Upstairs'][P.lv+1]}`+(exh>0?` · <b style="color:#f88">Exhausted ${Math.ceil(exh)}s</b>`:'')+(sl.dead>0?`<br>${NAME} respawns in ${Math.ceil(sl.dead)}s`:'')+(sp.dead>0?`<br>${SPIDER} respawns in ${Math.ceil(sp.dead)}s`:'')+(sl.mode==='chase'&&sl.dead<=0?'<br><b style="color:#f55">'+NAME+' is hunting you!</b>':'')+(sp.mode==='chase'&&sp.dead<=0&&P.lv===1?'<br><b style="color:#f55">'+SPIDER+'!</b>':'');
+sky();hH.rotation.z=-(gt/3600%12)/12*Math.PI*2;mH.rotation.z=-(gt/60%60)/60*Math.PI*2;
+$('clock').innerHTML=`<div style="font-size:26px;letter-spacing:2px">${fmt(gt)}</div><div style="font-family:Cinzel,serif;font-size:13px;opacity:.85">DAY ${Math.min(day,DAYS)} OF ${DAYS} · ${phase(gt/3600).toUpperCase()}</div>`;
 R.render(S,cam)}
 requestAnimationFrame(loop);
 </script></body></html>
