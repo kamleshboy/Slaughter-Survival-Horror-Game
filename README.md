@@ -1,4 +1,4 @@
-                                                              # 🔪 Slaughter
+ # 🔪 Slaughter
 
 **A first-person survival horror game inspired by Granny.**
 
