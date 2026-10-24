@@ -25,9 +25,17 @@ button:hover{background:#3a3a3a}.play{background:var(--accent);font-size:22px;fo
 @keyframes z{from{transform:scale(.2)}to{transform:scale(1.5)}}
 @keyframes sh{0%{margin:0}25%{margin:-14px 10px}50%{margin:12px -12px}75%{margin:-8px -10px}}
 #clock{position:absolute;top:8px;right:14px;text-align:right;text-shadow:0 0 6px #000;pointer-events:none}#eye{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;z-index:7}#dayTxt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Creepster,Impact,fantasy;font-size:46px;letter-spacing:3px;color:#d9c9a3;opacity:0;z-index:8;pointer-events:none;text-shadow:0 0 14px #800;text-align:center}
+#ov{z-index:10}#eyeM{position:absolute;inset:0;display:none;pointer-events:none;z-index:7}
+#title{position:absolute;inset:0;z-index:6;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:3vh 16px 4vh;box-sizing:border-box;pointer-events:none;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 38%,rgba(0,0,0,.8) 100%)}
+#title h1{font-family:Creepster,Impact,fantasy;font-weight:400;font-size:clamp(60px,17vw,200px);line-height:1;letter-spacing:.04em;color:#d41f1f;margin:0;text-align:center;text-shadow:0 0 22px #800,0 7px 0 #3a0000,0 0 80px #b00;animation:flick 5s infinite}
+#title .sub{font-family:Cinzel,serif;letter-spacing:.35em;text-align:center;font-size:clamp(11px,2vw,20px);color:#d9c9a3;text-shadow:0 0 8px #000;margin-top:4px}
+#title .btns{width:min(340px,80vw);text-align:center}#title button{pointer-events:auto}
+#title .how{font-size:12px;opacity:.75;margin:10px 0 0;line-height:1.5;text-shadow:0 0 5px #000}
+@keyframes flick{0%,91%,100%{opacity:1}92%{opacity:.65}94%{opacity:.95}96%{opacity:.55}98%{opacity:1}}
+body.menu #hud,body.menu #clock,body.menu #bar{display:none}
 </style></head><body>
 <canvas id="c"></canvas><div id="hud"></div><div id="msg"></div><div id="bar"><i id="barf"></i></div>
-<div id="clock"></div><div id="eye"></div><div id="dayTxt"></div><div id="ov"><div class="box" id="box"></div></div><div id="js"><img id="jimg"></div>
+<div id="title"><div><h1>SLAUGHTER</h1><div class="sub">THE ESCAPE-THE-HOUSE QUIZ GAME</div></div><div class="btns"><button class="play" onclick="begin()">▶ PLAY</button><button onclick="showCredits()">CREDITS</button><p class="how"><b>WASD</b> move · <b>Shift</b> sprint · <b>Arrows/drag</b> look · <b>E</b> pick up / hide / sit / open · <b>F</b> swing pan (earn it first!) · <b>M</b> mute</p></div></div><div id="clock"></div><div id="eye"></div><div id="eyeM"></div><div id="dayTxt"></div><div id="ov" style="display:none"><div class="box" id="box"></div></div><div id="js"><img id="jimg"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 // ====== EDIT YOUR QUESTIONS HERE ======  (c = 0-based index of the correct answer in a[])
@@ -60,7 +68,7 @@ const R=new THREE.WebGLRenderer({canvas:$('c'),antialias:true});
 const S=new THREE.Scene();S.background=new THREE.Color(0x070a14);S.fog=new THREE.FogExp2(0x070a14,.05);
 const cam=new THREE.PerspectiveCamera(70,1,.1,90);S.add(cam);
 function rs(){R.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()}addEventListener('resize',rs);rs();
-const amb=new THREE.AmbientLight(0x505068,.75);S.add(amb);cam.add(new THREE.PointLight(0xffe2a8,1,16));
+const amb=new THREE.AmbientLight(0x505068,.75);S.add(amb);const torch=new THREE.PointLight(0xffe2a8,1,16);cam.add(torch);
 const moon=new THREE.DirectionalLight(0x6677aa,.25);moon.position.set(-10,30,10);S.add(moon);
 const Mt=c=>new THREE.MeshLambertMaterial({color:c}),Bm=c=>new THREE.MeshBasicMaterial({color:c});
 function tex(w,h,draw,rx,ry){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'));const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rx,ry);return t}
@@ -68,7 +76,9 @@ const planks=g=>{for(let i=0;i<8;i++){g.fillStyle='hsl(28,'+(35+Math.random()*10
 const floorMat=new THREE.MeshLambertMaterial({map:tex(256,256,planks,.25,.25)});
 const wallTex=tex(128,128,g=>{g.fillStyle='#5b4a3c';g.fillRect(0,0,128,128);for(let x=0;x<128;x+=16){g.fillStyle='#6b5846';g.fillRect(x,0,8,128)}g.fillStyle='#2e2016';g.fillRect(0,112,128,16)},6,1);
 const wm=new THREE.MeshLambertMaterial({map:wallTex});
-const concrete=new THREE.MeshLambertMaterial({map:tex(64,64,g=>{g.fillStyle='#4a4a4a';g.fillRect(0,0,64,64);for(let i=0;i<60;i++){g.fillStyle='rgba(0,0,0,.15)';g.fillRect(Math.random()*64,Math.random()*64,3,3)}},8,1)});
+const concrete=new THREE.MeshLambertMaterial({map:tex(64,64,g=>{g.fillStyle='#4a4a4a';g.fillRect(0,0,64,64);for(let i=0;i<60;i++){g.fillStyle='rgba(0,0,0,.15)';g.fillRect(Math.random()*64,Math.random()*64,3,3)}},.25,.25)});
+const brickTex=tex(128,128,g=>{g.fillStyle='#2e2a28';g.fillRect(0,0,128,128);for(let r=0;r<8;r++){const off=(r%2)*16;for(let c=-1;c<4;c++){g.fillStyle='hsl('+(10+Math.random()*10)+','+(35+Math.random()*15)+'%,'+(26+Math.random()*10)+'%)';g.fillRect(c*32+off+1,r*16+1,30,14)}}},1,1);
+const bcache={};function brickM(len){const k=Math.round(len);return bcache[k]||(bcache[k]=(()=>{const t=brickTex.clone();t.needsUpdate=true;t.repeat.set(Math.max(1,len/2.2),1.3);return new THREE.MeshLambertMaterial({map:t})})())}
 // plates with holes (shape y = -z)
 function plate(mat,y,holes,flip){const sh=new THREE.Shape();sh.moveTo(-20,-20);sh.lineTo(20,-20);sh.lineTo(20,20);sh.lineTo(-20,20);
 holes.forEach(h=>{const p=new THREE.Path();p.moveTo(h[0],-h[3]);p.lineTo(h[2],-h[3]);p.lineTo(h[2],-h[1]);p.lineTo(h[0],-h[1]);sh.holes.push(p)});
@@ -83,7 +93,7 @@ function ground(w,d,x,z,y,c){const m=new THREE.Mesh(new THREE.PlaneGeometry(w,d)
 ground(120,30,0,-35,-.03,0x1a3a1a);ground(30,60,-35,0,-.03,0x1a3a1a);ground(40,60,50,0,-FH-.03,0x16301a);ground(14,40,27,0,-FH,0x1d3f1d);
 // collision + walls
 const W=[];let CUR=0;
-function wall(x1,z1,x2,z2,lv,m){W.push([x1,z1,x2,z2,lv]);const b=new THREE.Mesh(new THREE.BoxGeometry(x2-x1,FH,z2-z1),m||(lv<0?concrete:wm));b.position.set((x1+x2)/2,lv*FH+FH/2,(z1+z2)/2);S.add(b)}
+function wall(x1,z1,x2,z2,lv,m){W.push([x1,z1,x2,z2,lv]);const b=new THREE.Mesh(new THREE.BoxGeometry(x2-x1,FH,z2-z1),m||(lv<0?brickM(Math.max(x2-x1,z2-z1)):wm));b.position.set((x1+x2)/2,lv*FH+FH/2,(z1+z2)/2);S.add(b);if(lv>=0){const bw=x2-x1,bd=z2-z1,lg=bw>bd;[[.18,.1,0x2a1a0a,.09],[.12,.08,0x3a2616,FH-.06]].forEach(t=>{const tr=new THREE.Mesh(new THREE.BoxGeometry(lg?bw:bw+t[1],t[0],lg?bd+t[1]:bd),Mt(t[2]));tr.position.set((x1+x2)/2,lv*FH+t[3],(z1+z2)/2);S.add(tr)})}}
 function hit(x,z,r,lv){for(const w of W)if((w[4]===lv||w[4]===2)&&x>w[0]-r&&x<w[2]+r&&z>w[1]-r&&z<w[3]+r)return true;return false}
 function los(a,b,lv){for(let i=1;i<20;i++){const t=i/20;if(hit(a.x+(b.x-a.x)*t,a.z+(b.z-a.z)*t,.05,lv))return false}return true}
 // ground floor shell
@@ -102,33 +112,58 @@ const doors=[],open={front:false,back:false};
 function door(x,z,len,ax,lv,lock){const g=new THREE.Group();g.position.set(x,lv*FH,z);const m=new THREE.Mesh(ax==='x'?new THREE.BoxGeometry(len,2.7,.1):new THREE.BoxGeometry(.1,2.7,len),Mt(lock?(lock==='front'?0x7a1f1f:0x2a3a4a):0x4a2f1a));
 m.position.set(ax==='x'?len/2:0,1.35,ax==='x'?0:len/2);g.add(m);const k=new THREE.Mesh(new THREE.BoxGeometry(.12,.12,.12),Bm(0xd4af37));k.position.set(ax==='x'?len-.25:.08,1.2,ax==='x'?.08:len-.25);g.add(k);
 if(lock==='front'){[.5,1.3].forEach(o=>{const p=new THREE.Mesh(new THREE.BoxGeometry(.7,.45,.04),Mt(0x5a1010));p.position.set(len/2,1.1+o*.6,.07);g.add(p)})}
-S.add(g);const d={g,ax,lv,lock,o:0,cx:ax==='x'?x+len/2:x,cz:ax==='x'?z:z+len/2};doors.push(d);return d}
+S.add(g);{const fm=Mt(0x3a2616),y0=lv*FH,ex=ax==='x',post=(px,pz)=>{const p=new THREE.Mesh(new THREE.BoxGeometry(ex?.14:.4,2.85,ex?.4:.14),fm);p.position.set(px,y0+1.42,pz);S.add(p)};post(x,z);post(ex?x+len:x,ex?z:z+len);const lt=new THREE.Mesh(new THREE.BoxGeometry(ex?len+.14:.4,.2,ex?.4:len+.14),fm);lt.position.set(ex?x+len/2:x,y0+2.75,ex?z:z+len/2);S.add(lt)}
+const d={g,ax,lv,lock,o:0,cx:ax==='x'?x+len/2:x,cz:ax==='x'?z:z+len/2};doors.push(d);return d}
 door(-6.7,-5,2.4,'x',0);door(3.3,7,2.4,'x',0);door(-6,13.8,2.4,'z',0);door(-8.8,0,2.4,'x',1);door(0,-9.2,2.4,'z',1);door(10,-9.2,2.4,'z',1);door(-13.2,10,2.4,'x',1);door(4,10,2.4,'x',1);
 door(-8.8,5,2.4,'x',-1);door(2,-9.2,2.4,'z',-1);door(-1.2,-20.15,2.4,'x',0,'front');door(20,11,2.4,'z',-1,'back');
 const exitW=[-1.2,-20.3,1.2,-20,0],backW=[20,11,20.3,13.4,-1],winW=[-20.3,-11,-20,-9,0];W.push(exitW,backW,winW);let winOpen=false,winY=0;
+// ---- texture pack: grayscale patterns tinted by colour ----
+const mc={};
+const woodTex=tex(128,128,g=>{g.fillStyle='#c8c8c8';g.fillRect(0,0,128,128);for(let i=0;i<46;i++){g.strokeStyle='rgba(0,0,0,'+(.06+Math.random()*.12)+')';g.lineWidth=1+Math.random()*2;const y=Math.random()*128;g.beginPath();g.moveTo(0,y);g.bezierCurveTo(40,y+Math.random()*8-4,90,y+Math.random()*8-4,128,y+Math.random()*6-3);g.stroke()}g.fillStyle='rgba(0,0,0,.18)';g.beginPath();g.ellipse(40+Math.random()*50,30+Math.random()*70,6,3,0,0,7);g.fill()},1,1);
+const fabTex=tex(64,64,g=>{g.fillStyle='#d4d4d4';g.fillRect(0,0,64,64);for(let i=0;i<64;i+=4){g.fillStyle='rgba(0,0,0,.09)';g.fillRect(i,0,2,64);g.fillRect(0,i,64,2)}},3,3);
+const quiltTex=tex(64,64,g=>{g.fillStyle='#e0e0e0';g.fillRect(0,0,64,64);g.strokeStyle='rgba(0,0,0,.22)';g.lineWidth=2;for(let i=-64;i<128;i+=16){g.beginPath();g.moveTo(i,0);g.lineTo(i+64,64);g.moveTo(i+64,0);g.lineTo(i,64);g.stroke()}},4,4);
+const rugTex=tex(128,128,g=>{g.fillStyle='#e2e2e2';g.fillRect(0,0,128,128);g.strokeStyle='#777';g.lineWidth=7;g.strokeRect(6,6,116,116);g.lineWidth=2;g.strokeRect(18,18,92,92);[40,24].forEach(r=>{g.beginPath();g.moveTo(64,64-r);g.lineTo(64+r,64);g.lineTo(64,64+r);g.lineTo(64-r,64);g.closePath();g.stroke()})},1,1);
+const WOODS=[0x4a2f1a,0x5a3a22,0x3a2616,0x6b4a2a,0x5a4a3a],FABS=[0x7a3b3b,0x3b5a3b,0x8a2a3a];
+const lamb=(m,c)=>new THREE.MeshLambertMaterial({map:m,color:c});
+function surf(c){return mc[c]||(mc[c]=WOODS.includes(c)?lamb(woodTex,c):FABS.includes(c)?lamb(fabTex,c):Mt(c))}
+function fab(c){return mc['f'+c]||(mc['f'+c]=lamb(fabTex,c))}
+function quilt(c){return mc['q'+c]||(mc['q'+c]=lamb(quiltTex,c))}
 // furniture helpers
-function F(x1,z1,x2,z2,h,col,solid=true,y0=0){const m=new THREE.Mesh(new THREE.BoxGeometry(x2-x1,h,z2-z1),typeof col==='number'?Mt(col):col);m.position.set((x1+x2)/2,y0+CUR*FH+h/2,(z1+z2)/2);S.add(m);if(solid)W.push([x1,z1,x2,z2,CUR]);return m}
+function F(x1,z1,x2,z2,h,col,solid=true,y0=0){const m=new THREE.Mesh(new THREE.BoxGeometry(x2-x1,h,z2-z1),typeof col==='number'?surf(col):col);m.position.set((x1+x2)/2,y0+CUR*FH+h/2,(z1+z2)/2);S.add(m);if(solid)W.push([x1,z1,x2,z2,CUR]);return m}
 function cyl(x,z,r,h,col,y0=0,seg=12){const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,seg),Mt(col));m.position.set(x,y0+CUR*FH+h/2,z);S.add(m);return m}
-function rug(x,z,w,d,col){const m=new THREE.Mesh(new THREE.PlaneGeometry(w,d),Mt(col));m.rotation.x=-Math.PI/2;m.position.set(x,CUR*FH+.03,z);S.add(m)}
+function rug(x,z,w,d,col){const m=new THREE.Mesh(new THREE.PlaneGeometry(w,d),lamb(rugTex,col));m.rotation.x=-Math.PI/2;m.position.set(x,CUR*FH+.03,z);S.add(m)}
 function lamp(x,z){const y=CUR*FH;const d=new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,.05,18),Mt(0x6a5a3a));d.position.set(x,y+FH-.04,z);S.add(d);const c=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,.25,6),Mt(0x333333));c.position.set(x,y+FH-.17,z);S.add(c);const sh=new THREE.Mesh(new THREE.ConeGeometry(.38,.3,16,1,true),new THREE.MeshLambertMaterial({color:0xc9b88a,side:THREE.DoubleSide}));sh.position.set(x,y+FH-.38,z);S.add(sh);const b=new THREE.Mesh(new THREE.SphereGeometry(.14,10,10),Bm(0xffeebb));b.position.set(x,y+FH-.4,z);S.add(b);const l=new THREE.PointLight(0xffcc88,.55,12);l.position.set(x,y+FH-.7,z);S.add(l)}
 const winMeshes=[];function pic(x,y,z,ry,w,h,col,basic){const g=new THREE.Mesh(new THREE.BoxGeometry(w,h,.08),basic?Bm(col):Mt(col));g.position.set(x,CUR*FH+y,z);g.rotation.y=ry;S.add(g);if(basic)winMeshes.push(g)}
 function plant(x,z){cyl(x,z,.25,.4,0x8a4a2a);const m=new THREE.Mesh(new THREE.SphereGeometry(.45,8,8),Mt(0x2a6a2a));m.position.set(x,CUR*FH+.85,z);S.add(m)}
 function shelf(x1,z1,x2,z2,h,col){F(x1,z1,x2,z2,h,col);for(let y=.5;y<h;y+=.5)F(x1-.03,z1-.03,x2+.03,z2+.03,.05,0x2a1a0a,false,y);
 const n=Math.floor(Math.max(x2-x1,z2-z1)/.35);for(let i=0;i<n;i++){const c=[0x8a2a2a,0x2a4a8a,0x2a7a3a,0xb09030][i%4],bx=x2-x1>z2-z1;F(bx?x1+.1+i*.35:x1,bx?z1:z1+.1+i*.35,bx?x1+.3+i*.35:x2,bx?z2:z1+.3+i*.35,.3,c,false,h)}}
+const sits=[],FRONT={'x-':[1,0],'x+':[-1,0],'z-':[0,1],'z+':[0,-1]},SYAW={'x-':-Math.PI/2,'x+':Math.PI/2,'z-':Math.PI,'z+':0};
+function bx(g,w,h,d,px,py,pz,mm){const k=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mm);k.position.set(px,py+h/2,pz);g.add(k)}
+function oriented(x1,z1,x2,z2,back,fn){const ex=back[0]==='x',L=ex?z2-z1:x2-x1,D=ex?x2-x1:z2-z1,g=new THREE.Group();g.position.set((x1+x2)/2,CUR*FH,(z1+z2)/2);g.rotation.y={'x-':0,'x+':Math.PI,'z-':-Math.PI/2,'z+':Math.PI/2}[back];fn(g,L,D);S.add(g);W.push([x1,z1,x2,z2,CUR]);return g}
+function couch(x1,z1,x2,z2,back,col){const ex=back[0]==='x',L=ex?z2-z1:x2-x1,D=ex?x2-x1:z2-z1;
+const og=oriented(x1,z1,x2,z2,back,(g,L,D)=>{const m=surf(col),cu=fab(col+0x151515);bx(g,D-.02,.4,L-.04,.01,0,0,Mt(0x2a1a10));bx(g,.35,1.2,L+.04,-D/2+.175,0,0,m);[-1,1].forEach(s=>bx(g,D-.3,.72,.3,.17,0,s*(L/2-.15),m));
+const n=Math.max(1,Math.round(L/1.1)),cw=(L-.8)/n;for(let i=0;i<n;i++)bx(g,D-.55,.18,cw-.04,.1,.4,-(L-.8)/2+cw*(i+.5),cu)});
+const n=Math.max(1,Math.round(L/2.4)),f=FRONT[back];for(let i=0;i<n;i++){const t=(i+.5)/n,cx=ex?(x1+x2)/2:x1+(x2-x1)*t,cz=ex?z1+(z2-z1)*t:(z1+z2)/2;sits.push({x:cx+f[0]*.1,z:cz+f[1]*.1,lv:CUR,yaw:SYAW[back],ox:cx+f[0]*(D/2+.7),oz:cz+f[1]*(D/2+.7),h:1.2,obj:og})}}
+function bed(x1,z1,x2,z2,back,col){const ex=back[0]==='x',D0=ex?x2-x1:z2-z1,og=oriented(x1,z1,x2,z2,back,(g,L,D)=>{const wd=surf(0x4a2f1a);bx(g,D,.06,L,0,.3,0,wd);[[-1,-1],[1,-1],[-1,1],[1,1]].forEach(c=>bx(g,.1,.3,.1,c[0]*(D/2-.07),0,c[1]*(L/2-.07),wd));bx(g,D-.14,.3,L-.14,0,.36,0,Mt(0xe8e8e8));bx(g,D*.62-.04,.07,L-.1,(D*.38-.04)/2,.66,0,quilt(col));
+const np=L>2.5?2:1;for(let i=0;i<np;i++)bx(g,.5,.14,Math.min(.9,L/np-.3),-D/2+.45,.66,np===1?0:(i-.5)*(L/2),Mt(0xf2efe6));bx(g,.12,1.15,L+.08,-D/2+.04,0,0,wd);bx(g,.1,.4,L+.04,D/2-.03,.3,0,wd)}),f=FRONT[back],cx=(x1+x2)/2,cz=(z1+z2)/2;hides.push({x:cx,z:cz,lv:CUR,h:.2,ox:cx+f[0]*(D0/2+.8),oz:cz+f[1]*(D0/2+.8),obj:og,bed:true})}
+function crib(x1,z1,x2,z2){oriented(x1,z1,x2,z2,'x-',(g,L,D)=>{const m=surf(0x5a3a22);bx(g,D,.1,L,0,.3,0,m);bx(g,D-.1,.15,L-.1,0,.4,0,Mt(0xddddff));[-1,1].forEach(s=>{bx(g,D,.06,.06,0,.9,s*(L/2-.03),m);for(let i=0;i<=6;i++)bx(g,.04,.55,.04,-D/2+.04+i*(D-.08)/6,.4,s*(L/2-.03),m);bx(g,.06,.6,L,s*(D/2-.03),.4,0,m)})})}
+function chair(x,z,yaw,col=0x5a3a22){const g=new THREE.Group();g.position.set(x,CUR*FH,z);g.rotation.y=yaw;const m=surf(col);bx(g,.5,.07,.5,0,.45,0,m);[[-.2,-.2],[.2,-.2],[-.2,.2],[.2,.2]].forEach(l=>bx(g,.06,.45,.06,l[0],0,l[1],m));bx(g,.5,.55,.06,0,.52,.22,m);S.add(g);W.push([x-.27,z-.27,x+.27,z+.27,CUR]);
+const fx=-Math.sin(yaw),fz=-Math.cos(yaw);sits.push({x,z,lv:CUR,yaw,ox:x-fx*.95,oz:z-fz*.95,h:1.15,obj:g})}
+function pipe(x,y,z,len,ax){const m=new THREE.Mesh(new THREE.CylinderGeometry(.09,.09,len,8),Mt(0x7a5a3a));if(ax==='x')m.rotation.z=Math.PI/2;else m.rotation.x=Math.PI/2;m.position.set(x,y,z);S.add(m)}
 const hides=[];
 // ===== GROUND FLOOR =====
 CUR=0;
 // kitchen
 F(-19.7,-19.7,-14.5,-18.8,1,0x8a8a8a);F(-12.5,-19.7,-9,-18.8,1,0x8a8a8a);F(-14.5,-19.7,-12.5,-18.8,1,0x222222);F(-19.7,-19.7,-9,-19.3,.8,0x5a3a22,false,1.8);F(-19.7,-16.5,-18.6,-15,2.2,0xdddddd);
-F(-17.5,-10,-14.8,-8.2,1,0x6b4a2a);F(-16,-15,-12,-13.5,.9,0x4a2f1a);rug(-13,-13,4,3,0x7a2a2a);F(-15.6,-19.6,-14.6,-19.1,.15,0x999999,false,1);pic(-12,2,-19.8,0,.5,.5,0xeeeeee);
+F(-17.5,-10,-14.8,-8.2,1,0x6b4a2a);F(-16,-15,-12,-13.5,.9,0x4a2f1a);chair(-15,-16,Math.PI);chair(-13,-16,Math.PI);rug(-13,-13,4,3,0x7a2a2a);F(-15.6,-19.6,-14.6,-19.1,.15,0x999999,false,1);pic(-12,2,-19.8,0,.5,.5,0xeeeeee);
 // dining room
-F(6,-14,11,-12,.9,0x4a2f1a);[[6.4,-15.3],[9.6,-15.3],[6.4,-11.6],[9.6,-11.6]].forEach(c=>F(c[0],c[1],c[0]+.9,c[1]+.9,.5,0x5a3a22));F(3,-19.7,9,-18.8,1.6,0x5a3a22);F(14,-19.7,18,-18.9,2.2,0x4a2f1a);rug(8.5,-13,7,5,0x553355);
+F(6,-14,11,-12,.9,0x4a2f1a);chair(6.9,-15,Math.PI);chair(9.9,-15,Math.PI);chair(6.9,-11,0);chair(9.9,-11,0);chair(5,-13,-Math.PI/2);chair(12.3,-13,Math.PI/2);[[7,-13.4],[10,-13.4],[7,-12.6],[10,-12.6]].forEach(p=>cyl(p[0],p[1],.17,.03,0xeeeeee,.9));F(3,-19.7,9,-18.8,1.6,0x5a3a22);F(14,-19.7,18,-18.9,2.2,0x4a2f1a);rug(8.5,-13,7,5,0x553355);
 cyl(8.5,-13,.2,.35,0xd4af37,.9);pic(12,2,-19.8,0,1,1.3,0x2a1a0a);plant(19,-17);
 // living room
-F(-19.7,-3,-17.7,3,.9,0x7a3b3b);F(-19.7,-3,-19.2,3,1.4,0x7a3b3b);F(-16,-1,-14,1,.5,0x3a2616);rug(-15.5,0,5,6,0x2a4a5a);F(18.6,-2.5,19.7,2.5,.6,0x3a2616);F(19.2,-1.8,19.7,1.8,1.4,0x111111,false,.6);shelf(19,-4.7,19.8,-3,2.4,0x4a2f1a);plant(-19,-4);
+couch(-19.7,-3,-17.7,3,'x-',0x7a3b3b);couch(-14.2,2.5,-12.2,4.5,'z+',0x3b5a3b);F(-16,-1,-14,1,.5,0x3a2616);rug(-15.5,0,5,6,0x2a4a5a);F(18.6,-2.5,19.7,2.5,.6,0x3a2616);F(19.2,-1.8,19.7,1.8,1.4,0x111111,false,.6);shelf(19,-4.7,19.8,-3,2.4,0x4a2f1a);plant(-19,-4);
 F(-10,-3.6,-7.5,-2.2,.9,0x5a3a22);
 // left bedroom
-F(-19.7,8,-17,12,.7,0xcfcfe0);F(-19.7,8,-19.2,12,1.4,0x4a2f1a);F(-12,19,-8,19.8,.9,0x4a2f1a);F(-19.7,16.5,-18.7,19.7,1,0x4a2f1a);rug(-13,13,4,4,0x552222);F(-19.7,12.5,-18.9,13.5,.5,0x3a2616);plant(-7,8.5);
+bed(-19.7,8,-17,12,'x-',0x5a5a9a);F(-12,19,-8,19.8,.9,0x4a2f1a);chair(-10,17.7,Math.PI);cyl(-19.3,13,.1,.3,0xd8c88a,.5);pic(-19.8,1.6,14.8,Math.PI/2,.8,1.2,0xaac4d4);F(-19.7,16.5,-18.7,19.7,1,0x4a2f1a);rug(-13,13,4,4,0x552222);F(-19.7,12.5,-18.9,13.5,.5,0x3a2616);plant(-7,8.5);
 // hall + wardrobe
 F(8,19.2,12.5,19.8,2.4,0x4a2f1a);hides.push({x:10.2,z:18.5,lv:0});F(-2,19,2,19.8,.9,0x3a2616);rug(2,12,3,7,0x663322);pic(5,1.8,19.85,Math.PI,1.4,1,0x2a1a0a);
 [[-14,-12],[8,-13],[-12,0],[0,14]].forEach(l=>lamp(l[0],l[1]));
@@ -137,7 +172,7 @@ pic(-5,1.8,-19.8,0,1.2,.9,0x2a1a0a);pic(-19.8,1.8,10,Math.PI/2,1,.8,0x2a1a0a);
 F(-1.7,-20.2,-1.35,-19.8,3,0x3a2616,false);F(1.35,-20.2,1.7,-19.8,3,0x3a2616,false);F(-1.7,-20.2,1.7,-19.8,.3,0x3a2616,false,2.7);
 [-4,4].forEach(x=>{pic(x,1.7,-19.9,0,1,1.6,0x16224a,true);F(x-.55,-20.1,x+.55,-19.85,.08,0x3a2616,false,2.5);F(x-.55,-20.1,x+.55,-19.85,.08,0x3a2616,false,.9)});
 F(-2.4,-23,2.4,-20.3,.2,0x3a2616,false,3.1);F(-2.4,-23,-2.2,-22.8,3.1,0x3a2616,false);F(2.2,-23,2.4,-22.8,3.1,0x3a2616,false);F(-1.5,-21.8,1.5,-20.6,.04,0x222222,false);
-const pl=new THREE.PointLight(0xffbb66,.7,9);pl.position.set(0,2.8,-21.5);S.add(pl);
+const pb=new THREE.Mesh(new THREE.SphereGeometry(.12,8,8),Bm(0xffdd99));pb.position.set(0,2.9,-21.4);S.add(pb);
 // west window (escape route): frame, glass, curtains, sill
 F(-20.4,-11.15,-19.7,-8.85,.3,0x3a2616,false,2.3);F(-20.4,-11.15,-19.7,-8.85,.9,0x6b5846,false);F(-20.4,-11.15,-19.8,-10.95,1.4,0x3a2616,false,.9);F(-20.4,-9.05,-19.8,-8.85,1.4,0x3a2616,false,.9);
 const winG=new THREE.Group();const gm=new THREE.Mesh(new THREE.BoxGeometry(.05,1.4,2),new THREE.MeshBasicMaterial({color:0x7aa0cc,transparent:true,opacity:.35}));gm.position.set(-20.15,1.6,-10);winG.add(gm);winMeshes.push(gm);
@@ -145,20 +180,28 @@ const mu=new THREE.Mesh(new THREE.BoxGeometry(.08,1.4,.06),Mt(0x3a2616));mu.posi
 const latch=new THREE.Mesh(new THREE.BoxGeometry(.12,.1,.25),Bm(0xd4af37));latch.position.set(-20.05,1.0,-10);winG.add(latch);S.add(winG);
 F(-19.85,-11.3,-19.65,-10.5,2.1,0x8a2a3a,false,.2);F(-19.85,-9.5,-19.65,-8.7,2.1,0x8a2a3a,false,.2);F(-19.9,-11.4,-19.6,-8.6,.06,0x3a2616,false,2.35);
 // stairs up + down
-for(let i=0;i<8;i++)F(14.8,15-i,17.7,16-i,FH*(i+1)/8,0x5a3a22,false);
-F(14.6,8,14.8,16,3.2,0x4a2f1a,false);F(17.7,8,17.9,16,3.2,0x4a2f1a,false);W.push([14.6,8,14.8,16,2],[17.7,8,17.9,16,2],[14.8,16,17.7,16.3,1]);
+function wb(x1,z1,x2,z2,y,h,mat){const m=new THREE.Mesh(new THREE.BoxGeometry(x2-x1,h,z2-z1),mat);m.position.set((x1+x2)/2,y+h/2,(z1+z2)/2);S.add(m)}
+const tm=surf(0x3a2616),trm=surf(0x6b4a2a);
+for(let i=0;i<8;i++){const h=FH*(i+1)/8;wb(14.8,15-i,17.7,16-i,0,h,tm);wb(14.76,15-i,17.74,16-i+.07,h,.05,trm)}
+wb(14.6,8,14.8,16,0,FH+.1,wm);wb(17.7,8,17.9,16,0,FH+.1,wm);[14.86,17.64].forEach(x=>{const r=new THREE.Mesh(new THREE.BoxGeometry(.07,.07,Math.hypot(8,FH)),surf(0x5a3a22));r.position.set(x,1+FH/2,12);r.rotation.x=Math.atan2(FH,8);S.add(r)});W.push([14.6,8,14.8,16,2],[17.7,8,17.9,16,2],[14.8,16,17.7,16.3,1]);
 function stairH(x,z){return(x>14.8&&x<17.7&&z>8&&z<16)?FH*(16-z)/8:null}
-for(let i=0;i<8;i++){const hg=FH-FH*(i+.5)/8;const m=new THREE.Mesh(new THREE.BoxGeometry(3.1,hg,1),Mt(0x5a3a22));m.position.set(-3.05,-FH+hg/2,9.5+i);S.add(m)}
-F(-4.8,9,-4.6,17,3.2,0x4a2f1a,false,-FH);F(-1.5,9,-1.3,17,3.2,0x4a2f1a,false,-FH);W.push([-4.8,9,-4.6,17,2],[-1.5,9,-1.3,17,2],[-4.6,17,-1.5,17.3,0]);
+for(let i=0;i<8;i++){const top=-FH*(i+.5)/8;wb(-4.6,9+i,-1.5,10+i,-FH,top+FH,tm);wb(-4.64,9+i,-1.46,10+i+.07,top,.05,trm)}
+wb(-4.8,9,-4.6,17,-FH,FH+.1,wm);wb(-1.5,9,-1.3,17,-FH,FH+.1,wm);[-4.54,-1.56].forEach(x=>{const r=new THREE.Mesh(new THREE.BoxGeometry(.07,.07,Math.hypot(8,FH)),surf(0x5a3a22));r.position.set(x,1-FH/2,13);r.rotation.x=Math.atan2(FH,8);S.add(r)});W.push([-4.8,9,-4.6,17,2],[-1.5,9,-1.3,17,2],[-4.6,17,-1.5,17.3,0]);
 function downH(x,z){return(x>-4.6&&x<-1.5&&z>9&&z<17)?-FH*(z-9)/8:null}
+CUR=0;
+F(-18.62,-16,-18.5,-15.5,.8,0x333333,false,1);F(-18,-19.6,-16.5,-18.9,.05,0x445566,false,1);cyl(-17.25,-19.6,.04,.35,0xaaaaaa,1);[[-13.9,-19.3],[-13.1,-19.3]].forEach(p=>cyl(p[0],p[1],.18,.03,0x111111,1));
+F(10,5.9,14,6.85,2.3,0x7a7a7a);F(10.6,5.85,13.4,5.9,1.1,0x050505,false,.2);F(11,5.84,13,5.9,.4,Bm(0xff6a22),false,.2);F(9.7,5.7,14.3,6.85,.12,0x4a2f1a,false,2.3);pic(12,2.85,5.8,0,1.3,.5,0x2a1a0a);
+const fireL=new THREE.PointLight(0xff7733,.9,9);fireL.position.set(12,1,5);S.add(fireL);
+const tvM=Bm(0x223a55);F(19.12,-1.6,19.2,1.6,1.1,tvM,false,.7);
+cyl(-4,19.4,.2,.8,0x444444,0,8);F(3,19.3,4,19.8,2,0x4a2f1a);
 // ===== UPSTAIRS =====
 CUR=1;
-F(-19.7,-19.7,-17,-15.7,.7,0xcfcfe0);F(-19.7,-19.7,-19.2,-15.7,1.4,0x4a2f1a);F(-12,-19.7,-8,-18.9,.9,0x4a2f1a);rug(-12,-12,4,4,0x552244);F(-19.7,-12.5,-18.7,-10.5,1,0x4a2f1a);plant(-2,-18.5);
-shelf(2,-19.7,10,-19.1,2.4,0x4a2f1a);F(4,-15,7,-13,.9,0x3a2616);rug(5,-12,5,5,0x224455);F(0.5,-17,1.5,-14,1.2,0x4a2f1a);
-F(16,-19.7,19.7,-17.5,.9,0x7a3b3b);F(12,-14,15,-12.5,1.2,0xdddddd);cyl(18,-12,.7,.6,0xeeeeee);cyl(18,-12,.5,.05,0x4488cc,.6);F(11,-19.7,14,-19,2.2,0x4a2f1a);// bathroom
-F(-19.7,3,-17.7,9,.9,0x3b5a3b);rug(-10,6.5,6,4,0x663322);F(-19.7,-3,-17.7,-1,.5,0x3a2616);
-F(-19.7,15,-17,19.7,.7,0xcfe0cf);F(-19.7,15,-19.2,19.7,1.4,0x4a2f1a);F(-13,19,-10.5,19.8,.9,0x4a2f1a);hides.push({x:-9,z:18.5,lv:1});F(-9.5,19.2,-6.3,19.8,2.4,0x4a2f1a);// guest room
-shelf(-2,19.1,3,19.8,1.2,0x5a3a22);F(7,13,10,16,.6,0xcc6633);F(11,12,13,14,.5,0x3a6acc);rug(6,15,6,5,0x995533);// nursery
+bed(-19.7,-19.7,-17,-15.7,'x-',0x8a5a5a);F(-12,-19.7,-8,-18.9,.9,0x4a2f1a);chair(-10,-17.6,0);rug(-12,-12,4,4,0x552244);F(-19.7,-12.5,-18.7,-10.5,1,0x4a2f1a);plant(-2,-18.5);
+shelf(2,-19.7,10,-19.1,2.4,0x4a2f1a);F(4,-15,7,-13,.9,0x3a2616);chair(5.5,-16,Math.PI);chair(5.5,-11.9,0);rug(5,-12,5,5,0x224455);F(0.5,-17,1.5,-14,1.2,0x4a2f1a);
+F(10.4,-19.7,13.4,-18,.7,0xeeeeee);F(10.6,-19.5,13.2,-18.2,.05,Bm(0x4488cc),false,.68);F(17.1,-19.7,17.9,-19.2,.9,0xffffff);F(17,-19.2,18,-18.5,.45,0xffffff);F(14.5,-19.7,16,-19.1,.85,0xffffff);pic(15.25,1.7,-19.8,0,.9,.9,0xaac4d4);rug(15,-16,3,2.5,0x3a6a8a);// bathroom
+couch(-19.7,3,-17.7,9,'x-',0x3b5a3b);rug(-10,6.5,6,4,0x663322);F(-19.7,-3,-17.7,-1,.5,0x3a2616);
+bed(-19.7,15,-17,19.7,'x-',0x4a8a6a);F(-13,19,-10.5,19.8,.9,0x4a2f1a);chair(-11.75,17.8,Math.PI);hides.push({x:-9,z:18.5,lv:1});F(-9.5,19.2,-6.3,19.8,2.4,0x4a2f1a);// guest room
+shelf(-2,19.1,3,19.8,1.2,0x5a3a22);F(7,13,10,16,.6,0xcc6633);crib(-5.5,12,-3.9,14.2);F(11,12,13,14,.5,0x3a6acc);rug(6,15,6,5,0x995533);// nursery
 [[-12,-12],[5,-12],[-12,13],[6,15]].forEach(l=>lamp(l[0],l[1]));pic(-5,1.8,-19.8,0,1.2,.9,0x2a1a0a);pic(12,1.8,19.8,Math.PI,1.4,1,0x2a1a0a);
 // ===== BASEMENT =====
 CUR=-1;
@@ -166,15 +209,17 @@ shelf(-19.7,-19.7,-14,-19,2.4,0x5a4a3a);shelf(-19.7,-17,-19,-12,2.2,0x5a4a3a);cy
 const furn=new THREE.PointLight(0xff4411,.8,8);furn.position.set(-9,-FH+1.2,-15);S.add(furn);
 shelf(6,-19.7,14,-19,2.4,0x5a4a3a);F(15,-19.7,19.7,-18,1,0x7a7a7a);F(15,-15,17,-13,1,0xdddddd);F(17.5,-15,19.5,-13,1,0xdddddd);[[5,-8],[6.2,-7.5]].forEach(c=>cyl(c[0],c[1]-3,.55,1,0x5a3a22));
 F(-19.7,8,-14,9.2,1,0x4a2f1a);F(-19.7,12,-18,15,.8,0x8a8a8a);F(-12,16,-8,19.7,.7,0x7a7a7a);cyl(0,10,.5,1,0x5a3a22);cyl(-8,6.2,.5,1,0x5a3a22);shelf(8,19.1,16,19.8,2.2,0x5a4a3a);F(8,10,11,12,1,0x4a2f1a);
+chair(9.5,9,Math.PI);F(-6,-10,-3,-8,.8,0x5a4a3a);chair(-5.2,-10.9,Math.PI);chair(-3.8,-10.9,Math.PI);chair(-4.5,-7.1,0);chair(-16.8,13.5,Math.PI/2);
 // light bulbs in basement
 [[-12,-12],[10,-10],[0,14]].forEach(l=>{if(l[0]===0)lamp(l[0],l[1]);else lamp(l[0],l[1])});
+pipe(0,-FH+2.75,-3,38,'x');pipe(0,-FH+2.75,12,38,'x');pipe(-10,-FH+2.55,0,38,'z');pipe(10,-FH+2.55,0,38,'z');
 // ===== BACKYARD (east, at basement level) with well + playhouse =====
 const fc=0x8a6a42;F(20.3,1.85,34.3,2.15,1.5,fc);F(20.3,19.85,34.3,20.15,1.5,fc);F(34,2,34.3,11,1.5,fc);F(34,13.4,34.3,20,1.5,fc);F(33.9,10.7,34.4,11,2,0x5a3a22,false);F(33.9,13.4,34.4,13.7,2,0x5a3a22,false);
 cyl(27,7,1.1,.9,0x777777,0,14);cyl(27,7,.85,.92,0x050505,0,14);F(25.9,5.9,28.1,8.1,.1,0x777777);W.pop();W.push([25.9,5.9,28.1,8.1,-1]);
 F(25.95,6.9,26.1,7.1,2,0x5a3a22,false);F(27.9,6.9,28.05,7.1,2,0x5a3a22,false);const rf=new THREE.Mesh(new THREE.ConeGeometry(1.7,.9,4),Mt(0x7a3a2a));rf.position.set(27,-FH+2.5,7);rf.rotation.y=.78;S.add(rf);cyl(27,7,.05,.9,0x3a2616,1.6,6);
 F(26,14.5,26.15,17.5,2,0xcc4444);F(28.85,14.5,29,17.5,2,0xcc4444);F(26,17.35,29,17.5,2,0xcc4444);F(26,14.5,26.7,14.6,2,0xcc4444,false);F(28.3,14.5,29,14.6,2,0xcc4444,false);
 const pr=new THREE.Mesh(new THREE.ConeGeometry(2.6,1.3,4),Mt(0x3a5acc));pr.position.set(27.5,-FH+2.65,16);pr.rotation.y=.78;S.add(pr);F(26.2,16,27,17,.5,0xeeeecc,false);hides.push({x:27.5,z:16,lv:-1});
-const yl=new THREE.PointLight(0x99aaff,.6,14);yl.position.set(27,-FH+3,11);S.add(yl);
+
 const moonB=new THREE.Mesh(new THREE.SphereGeometry(2,16,16),Bm(0xeeeeff));moonB.material.fog=false;moonB.scale.setScalar(2.2);moonB.position.set(-30,35,-40);S.add(moonB);
 CUR=0;
 // trees
@@ -203,18 +248,22 @@ const fh=.7*F2H/F2W,face2=new THREE.Mesh(new THREE.PlaneGeometry(.7,fh),Bm(0xfff
 new THREE.TextureLoader().load(FACE2,t=>{face2.material.map=t;face2.material.needsUpdate=true});
 for(let i=0;i<4;i++)[-1,1].forEach(s=>{const l=add(SP,new THREE.BoxGeometry(1.2,.08,.08),0x111118,s*.9,.6,-.5+i*.35);l.rotation.z=s*.5;l.rotation.y=s*(i-1.5)*.25});S.add(SP);
 // weapon on camera (frying pan)
-const wp=new THREE.Group();const pan=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,.04,14),Mt(0x222222));pan.rotation.x=Math.PI/2;pan.position.y=.35;wp.add(pan);const hd=new THREE.Mesh(new THREE.BoxGeometry(.05,.5,.05),Mt(0x6a4a2a));wp.add(hd);wp.position.set(.4,-.45,-.7);cam.add(wp);
+const wp=new THREE.Group();const pan=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,.04,14),Mt(0x222222));pan.rotation.x=Math.PI/2;pan.position.y=.35;wp.add(pan);const hd=new THREE.Mesh(new THREE.BoxGeometry(.05,.5,.05),Mt(0x6a4a2a));wp.add(hd);wp.position.set(.4,-.45,-.7);wp.visible=false;cam.add(wp);
+const panM=new THREE.Group();{const d=new THREE.Mesh(new THREE.CylinderGeometry(.2,.2,.04,16),Mt(0x222222));d.position.y=.02;panM.add(d);const h=new THREE.Mesh(new THREE.BoxGeometry(.5,.04,.06),Mt(0x5a3a22));h.position.set(.4,.02,0);panM.add(h);const gl=new THREE.Mesh(new THREE.SphereGeometry(.42,10,10),new THREE.MeshBasicMaterial({color:0xffcc44,transparent:true,opacity:.22}));gl.position.y=.2;panM.add(gl)}
+panM.position.set(-10.8,1.0,-19.2);S.add(panM);const panItem={i:'pan'};
+const rc=new THREE.Raycaster();
+function aimAt(list){rc.setFromCamera({x:0,y:0},cam);rc.far=3.2;let best=null,bd=99;for(const o of list){if(o.lv!==P.lv||!o.obj||Math.hypot(o.x-P.x,o.z-P.z)>4.5)continue;const h=rc.intersectObject(o.obj,true);if(h.length&&h[0].distance<bd){bd=h[0].distance;best=o}}return best}
 // state
 const P={x:10,z:15,y:0,lv:0,yaw:Math.PI,pitch:0};
 const sl={x:-12,z:-12,y:0,lv:0,mode:'patrol',wp:0,dir:1,alert:0,dead:0};
 const sp={x:16,z:-8,wp:0,dir:1,mode:'patrol',alert:0,dead:0};
 const route=[[-12,-12],[-5.5,-5],[0,0],[4.5,7],[10,14],[16.3,16.8],[16.3,7],[16.3,4],[-7.6,4],[-7.6,-8],[8,-8],[16,-8]];
 const sroute=[[16,-8],[-7.6,-8],[-7.6,4],[8,4]];
-let gt=7*3600,lastH=7,tk=0,NM=1;const ac={x:0,y:0,z:0,pitch:0,roll:0},anim={k:null,e:0,dur:0,txt:'',sub:''};
-let got=0,day=1,paused=true,over=false,hidden=null,qi=0,qs=[],keys={},near=null,sta=100,exh=0,swCD=0,swT=0,hb=0;
+let menuOn=true,gt=21.5*3600,lastH=21,tk=0,NM=1;const ac={x:0,y:0,z:0,pitch:0,roll:0},anim={k:null,e:0,dur:0,txt:'',sub:''};
+let got=0,day=1,paused=true,over=false,hidden=null,seated=null,hasPan=false,chal=0,aimSit=null,aimHide=null,qi=0,qs=[],keys={},near=null,sta=100,exh=0,swCD=0,swT=0,hb=0;
 qs=QUESTIONS.map((_,i)=>i).sort(()=>Math.random()-.5);
 function say(t,ms=2500){$('msg').textContent=t;setTimeout(()=>{if($('msg').textContent===t)$('msg').textContent=''},ms)}
-function reset(){P.x=10;P.z=15;P.lv=0;P.y=0;hidden=null;sl.x=-12;sl.z=-12;sl.lv=0;sl.wp=0;sl.dir=1;sl.mode='patrol';sl.alert=0;sp.x=16;sp.z=-8;sp.wp=0;sp.dir=1;sp.alert=0}
+function reset(){P.x=10;P.z=15;P.lv=0;P.y=0;hidden=null;seated=null;sl.x=-12;sl.z=-12;sl.lv=0;sl.wp=0;sl.dir=1;sl.mode='patrol';sl.alert=0;sp.x=16;sp.z=-8;sp.wp=0;sp.dir=1;sp.alert=0}
 // ---- audio: procedural creepy music, heartbeat, scream ----
 let AC,master;
 function audio(){if(AC)return;try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(e){return}master=AC.createGain();master.gain.value=.55;master.connect(AC.destination);
@@ -230,12 +279,13 @@ function bell(){if(!AC)return;const t=AC.currentTime;[196,294,392].forEach((f,i)
 function chime(n){for(let i=0;i<n;i++)setTimeout(bell,i*1100)}
 // ---- UI ----
 function screen(h){$('box').innerHTML=h;$('ov').style.display='flex';paused=true}
-function start(){audio();if(AC&&AC.state==='suspended')AC.resume();$('ov').style.display='none';paused=false;try{$('c').requestPointerLock()}catch(e){}}window.start=start;window.begin=()=>{startDay();start()};
+function start(){audio();if(AC&&AC.state==='suspended')AC.resume();$('ov').style.display='none';paused=false;try{$('c').requestPointerLock()}catch(e){}}window.start=start;window.begin=()=>{$('title').style.display='none';menuOn=false;document.body.classList.remove('menu');G.scale.setScalar(1);SP.scale.setScalar(1);torch.color.set(0xffe2a8);torch.intensity=1;startDay();start()};window.showCredits=()=>{$('box').innerHTML='<h1 style="font-size:46px">CREDITS</h1><p style="font-family:Cinzel,serif;font-size:19px;line-height:1.6">Made by Kamlesh and Mr. Slaughter @2026</p><button onclick="closeCredits()">← Back</button>';$('ov').style.display='flex'};window.closeCredits=()=>{$('ov').style.display='none'};
 function menu(){screen(`<img class="face" src="${FACE}"><h1>${NAME.toUpperCase()}</h1><p>Escape ${NAME}'s house in ${DAYS} days. Find keys (each one asks a question), then pick your way out:<br><b>Window</b> ${NEED.window} keys · <b>Basement back door</b> ${NEED.back} keys · <b>Front door</b> ${NEED.front} keys.<br>Beware ${NAME} and ${SPIDER} the spider upstairs!</p><button class="play" onclick="begin()">▶ PLAY</button><p style="font-size:13px;opacity:.8"><b>WASD</b> move · <b>Shift</b> sprint · <b>Arrows/drag</b> look · <b>E</b> pick up / hide / open · <b>F</b> swing frying pan (knocks enemies out for 60s) · <b>M</b> mute</p>`)}
-menu();
+document.body.classList.add('menu');
 function ask(it){const q=QUESTIONS[qs[qi++%qs.length]];paused=true;if(document.exitPointerLock)document.exitPointerLock();
-screen(`<h3>${q.q}</h3><p style="margin:0;opacity:.7">To take the ${KEYS[it.i]}</p>`+q.a.map((t,i)=>`<button onclick="ans(${i},${q.c},${it.i})">${t}</button>`).join(''))}
-window.ans=(i,c,idx)=>{const it=items.find(o=>o&&o.i===idx);
+screen(`<h3>${q.q}</h3><p style="margin:0;opacity:.7">${it.i==='pan'?'Frying pan challenge — question '+(chal+1)+' of 3':'To take the '+KEYS[it.i]}</p>`+q.a.map((t,i)=>`<button onclick="ans(${i},${q.c},'${it.i}')">${t}</button>`).join(''))}
+window.ans=(i,c,idx)=>{if(idx==='pan'){if(i===c){chal++;if(chal>=3){hasPan=true;panM.visible=false;wp.visible=true;say('You earned the frying pan! Press F near an enemy to knock them out.',5000);start();return}ask(panItem);return}chal=0;sl.alert=10;sp.alert=6;say('Wrong! The pan challenge failed and '+NAME+' heard you!',3500);start();return}
+idx=+idx;const it=items.find(o=>o&&o.i===idx);
 if(i===c){S.remove(it.m);items[items.indexOf(it)]=null;got++;say('Correct! '+KEYS[idx]+' ('+got+'/'+TOTAL+')'+(got===NEED.window?' — you can open the WINDOW!':got===NEED.back?' — basement back door unlocked!':got===NEED.front?' — front door unlocked!':''),3500)}
 else{sl.alert=10;sp.alert=6;say('Wrong! '+NAME+' heard you!',3000)}start()};
 function whack(){swT=.3;for(const e of[[sl,G,NAME],[sp,SP,SPIDER]]){const o=e[0];const lv=e[1]===SP?1:o.lv;if(o.dead>0||lv!==P.lv)continue;const dx=o.x-P.x,dz=o.z-P.z,d=Math.hypot(dx,dz);
@@ -246,10 +296,11 @@ if(x[0]==='front'&&!open.front){open.front=true;W.splice(W.indexOf(exitW),1);say
 if(x[0]==='back'&&!open.back){open.back=true;W.splice(W.indexOf(backW),1);say('Back door open — run through the yard to the gate!',4000)}
 if(x[0]==='window'&&!winOpen){winOpen=true;W.splice(W.indexOf(winW),1);say('Window open — climb out!',4000)}return true}return false}
 addEventListener('keydown',e=>{keys[e.code]=1;if(e.code==='KeyM'&&master)master.gain.value=master.gain.value>0?0:.55;if(paused||over)return;
-if(e.code==='KeyF'&&swCD<=0){swCD=.9;whack()}
-if(e.code!=='KeyE')return;if(hidden){hidden=null;return}
-const h=hides.find(h=>h.lv===P.lv&&Math.hypot(h.x-P.x,h.z-P.z)<1.8);if(h){hidden=h;P.x=h.x;P.z=h.z;say('Hiding... press E to come out');return}
-if(exitTry())return;if(near)ask(near)});
+if(e.code==='KeyF'){if(!hasPan)say('You have to earn the frying pan first — find it on the kitchen counter.',3500);else if(swCD<=0){swCD=.9;whack()}}
+if(e.code!=='KeyE')return;if(hidden){if(hidden.ox!==undefined){P.x=hidden.ox;P.z=hidden.oz}hidden=null;return}if(seated){stand();return}
+const h=aimHide||hides.find(h=>!h.obj&&h.lv===P.lv&&Math.hypot(h.x-P.x,h.z-P.z)<1.8);if(h){hidden=h;P.x=h.x;P.z=h.z;say(h.bed?'Hiding under the bed... press E to come out':'Hiding... press E to come out');return}
+if(exitTry())return;if(near){ask(near);return}const st=aimSit;if(st){seated=st;P.x=st.x;P.z=st.z;P.yaw=st.yaw;P.pitch=0;say('Sitting — stamina refills fast. Press E to stand.',3000)}});
+function stand(){const s=seated;seated=null;const f=[-Math.sin(s.yaw),-Math.cos(s.yaw)];for(const c of[[s.ox,s.oz],[s.x+f[0]*1.1,s.z+f[1]*1.1],[s.x+f[1]*1.1,s.z-f[0]*1.1],[s.x-f[1]*1.1,s.z+f[0]*1.1]])if(!hit(c[0],c[1],.4,P.lv)){P.x=c[0];P.z=c[1];return}}
 addEventListener('keyup',e=>keys[e.code]=0);
 let drag=0;$('c').addEventListener('mousedown',()=>drag=1);addEventListener('mouseup',()=>drag=0);
 addEventListener('mousemove',e=>{if(paused)return;if(drag||document.pointerLockElement===$('c')){P.yaw-=e.movementX*.003;P.pitch=Math.max(-1,Math.min(1,P.pitch-e.movementY*.003))}});
@@ -262,12 +313,15 @@ function move(o,tx,tz,spd,dt,lv,r){const l=Math.hypot(tx-o.x,tz-o.z)||1;[o.x,o.z
 function chaseT(o){if(stairH(o.x,o.z)!=null)return P.y>o.y?[16.3,7]:[16.3,16.8];if(downH(o.x,o.z)!=null)return P.y<o.y?[-3.05,17.6]:[-3.05,8];
 if(o.lv===0)return P.lv===1?[16.3,16.8]:[-3.05,8];if(o.lv===1)return[16.3,7];return[-3.05,17.6]}
 function lerpP(e,p){if(e<=p[0][0])return p[0][1];for(let i=1;i<p.length;i++)if(e<=p[i][0]){const a=p[i-1],b=p[i];return a[1]+(b[1]-a[1])*(e-a[0])/(b[0]-a[0])}return p[p.length-1][1]}
-function startDay(by){reset();P.x=-18.4;P.z=10;P.lv=0;P.y=0;P.yaw=-Math.PI/2;P.pitch=0;gt=7*3600;lastH=7;anim.k='wake';anim.e=0;anim.dur=6;anim.txt='DAY '+Math.min(day,DAYS)+' — 7:00 AM';anim.sub=by?by+' dragged you back to bed...':'You wake up in your bed. Time to escape.'}
-function sleepNow(){if(anim.k)return;hidden=null;anim.k='sleep';anim.e=0;anim.dur=4.2;anim.txt='10:00 PM';anim.sub='You go back to sleep... Day '+day+' is over.'}
+function startDay(by){reset();P.x=-18.4;P.z=10;P.lv=0;P.y=0;P.yaw=-Math.PI/2;P.pitch=0;gt=7*3600;lastH=7;anim.k='wake';anim.e=0;anim.dur=9.2;anim.txt='DAY '+Math.min(day,DAYS)+' — 7:00 AM';anim.sub=by?by+' dragged you back to bed...':'You wake up in your bed. Time to escape.'}
+function sleepNow(){if(anim.k)return;hidden=null;seated=null;anim.k='sleep';anim.e=0;anim.dur=4.2;anim.txt='10:00 PM';anim.sub='You go back to sleep... Day '+day+' is over.'}
 function animStep(dt){anim.e+=dt;const e=anim.e;let eo,to;
-if(anim.k==='wake'){eo=lerpP(e,[[0,1],[1.1,1],[1.5,.55],[1.8,.95],[2.4,.15],[3.2,0]]);to=lerpP(e,[[0,0],[.5,1],[3.6,1],[5.2,0]]);
- const k=Math.min(1,Math.max(0,(e-2.6)/2.6)),z=k*k*(3-2*k);ac.x=-18.4+z*2.4;ac.y=.95+z*.65;ac.z=10;ac.pitch=1.25*(1-z);ac.roll=Math.sin(e*1.3)*.05*(1-z);
- if(e>=anim.dur){anim.k=null;P.x=-16;P.z=10;P.pitch=0;eo=0;to=0}}
+if(anim.k==='wake'){const o=lerpP(e,[[0,0],[1.4,0],[2.3,.1],[3.1,.03],[4,.3],[4.6,.15],[5.8,.6],[7,1]]);
+ $('eyeM').style.display='block';$('eyeM').style.background='radial-gradient(ellipse '+(8+o*160)+'vw '+(.3+Math.pow(o,.9)*150)+'vh at 50% 50%,transparent 42%,rgba(0,0,0,.96) 100%)';$('c').style.filter='blur('+((1-o)*10).toFixed(1)+'px)';
+ eo=0;to=lerpP(e,[[0,0],[.6,1],[3.8,1],[5.4,0]]);
+ const hp=lerpP(e,[[0,1.3],[4.5,1.3],[6.5,.55]]),k=Math.min(1,Math.max(0,(e-6.2)/2.6)),z=k*k*(3-2*k);
+ ac.x=-18.4+z*2.4;ac.y=.95+z*.65;ac.z=10;ac.pitch=hp*(1-z);ac.roll=Math.sin(e*1.1)*.05*(1-z);P.yaw=-Math.PI/2+Math.sin(e*.7)*.25*(1-z);
+ if(e>=anim.dur){anim.k=null;P.x=-16;P.z=10;P.pitch=0;P.yaw=-Math.PI/2;$('eyeM').style.display='none';$('c').style.filter='none';eo=0;to=0}}
 else{eo=lerpP(e,[[0,0],[2,1],[9,1]]);to=lerpP(e,[[0,0],[.8,1],[4,1]]);if(e>=anim.dur){anim.k=null;day++;if(day>DAYS){end(false)}else startDay()}}
 $('eye').style.opacity=eo;$('dayTxt').style.opacity=to;$('dayTxt').innerHTML=anim.txt+'<div style="font-family:\'Special Elite\',monospace;font-size:18px;margin-top:10px;letter-spacing:1px">'+anim.sub+'</div>'}
 const skyC=new THREE.Color(),tmpC=new THREE.Color(),wc=new THREE.Color();
@@ -286,13 +340,13 @@ if(!paused&&!over){
  if(keys.ArrowLeft)P.yaw+=1.8*dt;if(keys.ArrowRight)P.yaw-=1.8*dt;if(keys.ArrowUp)P.pitch=Math.min(1,P.pitch+dt);if(keys.ArrowDown)P.pitch=Math.max(-1,P.pitch-dt);
  swCD-=dt;if(swT>0)swT-=dt;wp.rotation.x=swT>0?-Math.sin((.3-swT)/.3*Math.PI)*1.4:0;
  const sl0=Math.hypot(P.x-sl.x,P.z-sl.z);
- if(!hidden){const f=(keys.KeyW?1:0)-(keys.KeyS?1:0),s=(keys.KeyD?1:0)-(keys.KeyA?1:0),mv=f||s;
+ if(!hidden&&!seated){const f=(keys.KeyW?1:0)-(keys.KeyS?1:0),s=(keys.KeyD?1:0)-(keys.KeyA?1:0),mv=f||s;
   const want=(keys.ShiftLeft||keys.ShiftRight)&&mv&&exh<=0&&sta>0;
   if(want){sta-=26*dt;if(sta<=0){sta=0;exh=10;say('Out of breath! Wait 10 seconds to sprint again.',3000)}if(sl.dead<=0&&sl.lv===P.lv&&sl0<6&&sl.alert<=0)sl.alert=3}
   else if(exh>0){exh-=dt;if(exh<=0)sta=35}else sta=Math.min(100,sta+14*dt);
   const sp2=(want?6.6:4)*dt,sy=Math.sin(P.yaw),cy=Math.cos(P.yaw);
   [P.x,P.z]=step(P.x,P.z,(-sy*f+cy*s)*sp2,(-cy*f-sy*s)*sp2,.4,P.lv);lvOf(P)}
- else sta=Math.min(100,sta+14*dt);
+ else sta=Math.min(100,sta+(seated?32:14)*dt);
  // Slaughter
  let chasing=false;
  if(sl.dead>0){sl.dead-=dt;if(sl.dead<=0){sl.dead=0;G.visible=true;sl.x=-12;sl.z=-12;sl.lv=0;sl.wp=0;sl.dir=1;sl.alert=0;say(NAME+' is back!')}}
@@ -318,15 +372,16 @@ if(!paused&&!over){
  doors.forEach(d=>{let g=0;if(d.lock)g=open[d.lock]?1:0;else{const n=(a,l)=>l===d.lv&&Math.hypot(a.x-d.cx,a.z-d.cz)<2.4;g=(n(P,P.lv)||n(sl,sl.lv)||n(sp,1))?1:0}d.o+=(g-d.o)*Math.min(1,dt*6);d.g.rotation.y=(d.ax==='x'?-1:1)*d.o*1.55});
  if(winOpen&&winY<1.5){winY+=dt*2;winG.position.y=Math.min(winY,1.5)}
  // items
- near=null;items.forEach(o=>{if(o){o.m.rotation.y+=dt*2;if(o.lv===P.lv&&Math.hypot(o.m.position.x-P.x,o.m.position.z-P.z)<2.3)near=o}});
- const m=$('msg');const hint=hidden?'':near?'Press E to pick up':hides.some(h=>h.lv===P.lv&&Math.hypot(h.x-P.x,h.z-P.z)<1.8)?'Press E to hide':'';
- if(hint)m.textContent=hint;else if(/^Press E to (pick|hide)/.test(m.textContent))m.textContent='';
+ cam.updateMatrixWorld();aimSit=seated?null:aimAt(sits);aimHide=hidden?null:aimAt(hides);near=null;items.forEach(o=>{if(o){o.m.rotation.y+=dt*2;if(o.lv===P.lv&&Math.hypot(o.m.position.x-P.x,o.m.position.z-P.z)<2.3)near=o}});if(!hasPan){panM.rotation.y+=dt*1.5;if(P.lv===0&&Math.hypot(panM.position.x-P.x,panM.position.z-P.z)<2.3)near=panItem}
+ const m=$('msg');const wh=hides.find(h=>!h.obj&&h.lv===P.lv&&Math.hypot(h.x-P.x,h.z-P.z)<1.8),hd=aimHide||wh;const hint=hidden||seated?'':near?(near.i==='pan'?'Press E: earn the frying pan (3 questions)':'Press E to pick up'):hd?(hd.bed?'Press E to hide under the bed':'Press E to hide'):aimSit?'Press E to sit':'';
+ if(hint)m.textContent=hint;else if(/^Press E/.test(m.textContent))m.textContent='';
  if(open.front&&P.z<-21.5||winOpen&&P.x<-21.5||open.back&&P.x>33.3)end(true);
  }}
-if(anim.k==='wake'){cam.position.set(ac.x,ac.y,ac.z);cam.rotation.set(ac.pitch,P.yaw,ac.roll,'YXZ')}else{cam.position.set(P.x,P.y+(hidden?1.2:1.6),P.z);cam.rotation.set(P.pitch,P.yaw,0,'YXZ')}
+if(menuOn){const mt=t/1000;cam.position.set(Math.sin(mt*.4)*.5,1.55,-22);cam.rotation.set(-.02,Math.sin(mt*.3)*.04,0);G.scale.setScalar(1.25);SP.scale.setScalar(1.35);G.position.set(-1.5,Math.sin(mt*1.6)*.03,-27);G.rotation.y=.12;SP.position.set(1.7,Math.sin(mt*1.3+1)*.03,-27);SP.rotation.y=-.12;torch.color.set(0xff6655);torch.intensity=2.4}
+if(menuOn){}else if(anim.k==='wake'){cam.position.set(ac.x,ac.y,ac.z);cam.rotation.set(ac.pitch,P.yaw,ac.roll,'YXZ')}else{cam.position.set(P.x,P.y+(hidden?(hidden.h||1.2):seated?(seated.h||1.15):1.6),P.z);cam.rotation.set(P.pitch,P.yaw,0,'YXZ')}
 $('barf').style.width=sta+'%';$('barf').style.background=exh>0?'#c33':'#4c8';
-$('hud').innerHTML=`Keys ${got}/${TOTAL} · ${['Basement','Ground floor','Upstairs'][P.lv+1]}`+(exh>0?` · <b style="color:#f88">Exhausted ${Math.ceil(exh)}s</b>`:'')+(sl.dead>0?`<br>${NAME} respawns in ${Math.ceil(sl.dead)}s`:'')+(sp.dead>0?`<br>${SPIDER} respawns in ${Math.ceil(sp.dead)}s`:'')+(sl.mode==='chase'&&sl.dead<=0?'<br><b style="color:#f55">'+NAME+' is hunting you!</b>':'')+(sp.mode==='chase'&&sp.dead<=0&&P.lv===1?'<br><b style="color:#f55">'+SPIDER+'!</b>':'');
-sky();hH.rotation.z=-(gt/3600%12)/12*Math.PI*2;mH.rotation.z=-(gt/60%60)/60*Math.PI*2;
+$('hud').innerHTML=`Keys ${got}/${TOTAL} · Pan ${hasPan?'✔ (F)':'🔒'} · ${['Basement','Ground floor','Upstairs'][P.lv+1]}`+(exh>0?` · <b style="color:#f88">Exhausted ${Math.ceil(exh)}s</b>`:'')+(sl.dead>0?`<br>${NAME} respawns in ${Math.ceil(sl.dead)}s`:'')+(sp.dead>0?`<br>${SPIDER} respawns in ${Math.ceil(sp.dead)}s`:'')+(sl.mode==='chase'&&sl.dead<=0?'<br><b style="color:#f55">'+NAME+' is hunting you!</b>':'')+(sp.mode==='chase'&&sp.dead<=0&&P.lv===1?'<br><b style="color:#f55">'+SPIDER+'!</b>':'');
+sky();if(menuOn)moonB.position.set(-15,15,-46);fireL.intensity=.8+Math.random()*.4;tvM.color.setHSL(.58,.5,.2+.08*Math.sin(t/160)+Math.random()*.03);hH.rotation.z=-(gt/3600%12)/12*Math.PI*2;mH.rotation.z=-(gt/60%60)/60*Math.PI*2;
 $('clock').innerHTML=`<div style="font-size:26px;letter-spacing:2px">${fmt(gt)}</div><div style="font-family:Cinzel,serif;font-size:13px;opacity:.85">DAY ${Math.min(day,DAYS)} OF ${DAYS} · ${phase(gt/3600).toUpperCase()}</div>`;
 R.render(S,cam)}
 requestAnimationFrame(loop);
