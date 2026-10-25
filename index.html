@@ -52,6 +52,14 @@ body.menu #hud,body.menu #clock,body.menu #bar{display:none}
 .box.guide h2{font-family:Creepster,fantasy;color:#c22;font-weight:400;letter-spacing:3px;margin:16px 0 4px;font-size:26px}
 .box.guide p,.box.guide li{font-family:'Special Elite',monospace;font-size:14px;line-height:1.55;color:#d8c8c0}
 .box.guide kbd{background:#2a0a0a;border:1px solid #700;padding:1px 6px;border-radius:3px;color:#fcc;font-family:inherit}
+#title h1{font-size:clamp(44px,9vw,128px);margin-top:0}
+#title .sub{font-size:clamp(10px,1.3vw,16px)}
+.drips{height:56px !important;margin-top:-.05em}
+@keyframes dp{0%{height:6px;opacity:1}55%{height:44px}85%{height:52px;opacity:1}100%{height:52px;opacity:0}}
+#title .btns{width:auto !important;display:flex;flex-wrap:wrap;gap:14px;justify-content:center;align-items:center;max-width:96vw}
+#title .btns .cbtn{width:clamp(150px,22vw,230px);margin:4px 0 !important;font-size:clamp(20px,2.4vw,28px) !important;padding:8px 0 !important}
+#title .btns .cbtn.play{font-size:clamp(26px,3.2vw,38px) !important}
+#title #snd{flex-basis:100%;margin:2px 0 0}
 </style></head><body>
 <canvas id="c"></canvas><div id="hud"></div><div id="msg"></div><div id="bar"><i id="barf"></i></div>
 <div id="title"><div class="grain"></div><div id="flash"></div><div class="top"><h1>SLAUGHTER</h1><div class="drips"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="sub">HE HEARS EVERYTHING</div></div><div class="btns"><button class="cbtn play" onclick="begin()">PLAY</button><button class="cbtn" onclick="showGuide()">GUIDE</button><button class="cbtn" onclick="showCredits()">CREDITS</button><p id="snd">🔊 click anywhere for sound</p></div></div><div id="clock"></div><div id="eye"></div><div id="eyeM"></div><div id="dayTxt"></div><div id="ov" style="display:none"><div class="box" id="box"></div></div><div id="js"><img id="jimg"></div>
@@ -305,7 +313,7 @@ const rc=new THREE.Raycaster();
 function aimAt(list){rc.setFromCamera({x:0,y:0},cam);rc.far=3.2;let best=null,bd=99;for(const o of list){if(o.lv!==P.lv||!o.obj||Math.hypot(o.x-P.x,o.z-P.z)>4.5)continue;const h=rc.intersectObject(o.obj,true);if(h.length&&h[0].distance<bd){bd=h[0].distance;best=o}}return best}
 // state
 const P={x:10,z:15,y:0,lv:0,yaw:Math.PI,pitch:0};
-const sl={x:-12,z:-12,y:0,lv:0,mode:'patrol',wp:0,dir:1,alert:0,dead:0};
+const sl={x:-7.6,z:4,y:FH,lv:1,mode:'patrol',wp:8,dir:1,alert:0,dead:0};
 const sp={x:16,z:-8,wp:0,dir:1,mode:'patrol',alert:0,dead:0};
 const route=[[-12,-12],[-5.5,-5],[0,0],[4.5,7],[10,14],[16.3,16.8],[16.3,7],[16.3,4],[-7.6,4],[-7.6,-8],[8,-8],[16,-8]];
 const sroute=[[16,-8],[-7.6,-8],[-7.6,4],[8,4]];
@@ -313,7 +321,7 @@ let menuOn=true,gt=21.5*3600,lastH=21,tk=0,NM=1;const ac={x:0,y:0,z:0,pitch:0,ro
 let got=0,day=1,paused=true,over=false,hidden=null,seated=null,hasPan=false,chal=0,aimSit=null,aimHide=null,aimTV=null,kq=0,crouching=false,creakT=0,stepAcc=0,qi=0,qs=[],keys={},near=null,sta=100,exh=0,swCD=0,swT=0,hb=0;
 qs=QUESTIONS.map((_,i)=>i).sort(()=>Math.random()-.5);
 function say(t,ms=2500){$('msg').textContent=t;setTimeout(()=>{if($('msg').textContent===t)$('msg').textContent=''},ms)}
-function reset(){P.x=10;P.z=15;P.lv=0;P.y=0;hidden=null;seated=null;sl.x=-12;sl.z=-12;sl.lv=0;sl.wp=0;sl.dir=1;sl.mode='patrol';sl.alert=0;sl.lure=null;sp.lure=null;sp.x=16;sp.z=-8;sp.wp=0;sp.dir=1;sp.alert=0}
+function reset(){P.x=10;P.z=15;P.lv=0;P.y=0;hidden=null;seated=null;sl.x=-7.6;sl.z=4;sl.lv=1;sl.wp=8;sl.dir=1;sl.mode='patrol';sl.alert=0;sl.lure=null;sp.lure=null;sp.x=16;sp.z=-8;sp.wp=0;sp.dir=1;sp.alert=0}
 // ---- audio: procedural creepy music, heartbeat, scream ----
 let AC,master,bgm=null,musicGain=null,procOn=false,muted=false,dng=0,tenseGain=null,chaseGain=null,jumpBuf=null,chaseBuf=null,chaseN=null,dOn=false,holdT=0;const tOsc=[];
 function initAC(){if(AC)return;try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(e){return}master=AC.createGain();master.gain.value=.55;master.connect(AC.destination)}
@@ -348,7 +356,7 @@ function plink(){const n=[220,233.1,261.6,277.2,311.1,349.2,415.3],f=n[Math.floo
 function thump(){if(!AC)return;const o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime;o.frequency.setValueAtTime(70,t);o.frequency.exponentialRampToValueAtTime(35,t+.2);g.gain.setValueAtTime(.7,t);g.gain.exponentialRampToValueAtTime(.001,t+.25);o.connect(g);g.connect(master);o.start(t);o.stop(t+.3)}
 function scream(){if(!AC)return;if(jumpBuf){const n=AC.createBufferSource(),g=AC.createGain();n.buffer=jumpBuf;g.gain.value=muted?0:JUMPSCARE_VOLUME;n.connect(g);g.connect(AC.destination);n.start();return}const t=AC.currentTime,o=AC.createOscillator();o.type='sawtooth';o.frequency.setValueAtTime(900,t);o.frequency.exponentialRampToValueAtTime(260,t+1.2);const g=AC.createGain();g.gain.setValueAtTime(.9,t);g.gain.exponentialRampToValueAtTime(.001,t+1.4);o.connect(g);g.connect(master);o.start(t);o.stop(t+1.4);
 const b=AC.createBuffer(1,AC.sampleRate*1.2,AC.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);const n=AC.createBufferSource();n.buffer=b;const ng=AC.createGain();ng.gain.value=.8;n.connect(ng);ng.connect(master);n.start(t)}
-function tick(){if(!AC||paused)return;const o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime;o.type='square';o.frequency.value=1500;g.gain.setValueAtTime(.025,t);g.gain.exponentialRampToValueAtTime(.001,t+.03);o.connect(g);g.connect(master);o.start(t);o.stop(t+.04)}
+function tick(){return;const o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime;o.type='square';o.frequency.value=1500;g.gain.setValueAtTime(.025,t);g.gain.exponentialRampToValueAtTime(.001,t+.03);o.connect(g);g.connect(master);o.start(t);o.stop(t+.04)}
 function bell(){if(!AC)return;const t=AC.currentTime;[196,294,392].forEach((f,i)=>{const o=AC.createOscillator(),g=AC.createGain();o.frequency.value=f;g.gain.setValueAtTime(.18/(i+1),t);g.gain.exponentialRampToValueAtTime(.001,t+2.4);o.connect(g);g.connect(master);o.start(t);o.stop(t+2.5)})}
 function chime(n){for(let i=0;i<n;i++)setTimeout(bell,i*1100)}
 // ---- UI ----
@@ -402,7 +410,7 @@ function patrol(o,rt){const w=rt[o.wp];if(Math.hypot(w[0]-o.x,w[1]-o.z)<.7){o.wp
 function move(o,tx,tz,spd,dt,lv,r){const l=Math.hypot(tx-o.x,tz-o.z)||1;[o.x,o.z]=step(o.x,o.z,(tx-o.x)/l*spd*dt,(tz-o.z)/l*spd*dt,r,lv)}
 function chaseT(o,tl,ty){if(stairH(o.x,o.z)!=null)return ty>o.y?[16.3,7]:[16.3,16.8];if(downH(o.x,o.z)!=null)return ty<o.y?[-3.05,17.6]:[-3.05,8];if(o.lv===0)return tl===1?[16.3,16.8]:[-3.05,8];if(o.lv===1)return[16.3,7];return[-3.05,17.6]}
 function lerpP(e,p){if(e<=p[0][0])return p[0][1];for(let i=1;i<p.length;i++)if(e<=p[i][0]){const a=p[i-1],b=p[i];return a[1]+(b[1]-a[1])*(e-a[0])/(b[0]-a[0])}return p[p.length-1][1]}
-function startDay(by){reset();G.position.set(sl.x,0,sl.z);G.rotation.set(0,0,0);G.scale.setScalar(1);SP.position.set(sp.x,FH,sp.z);SP.rotation.set(0,0,0);SP.scale.setScalar(1);wp.visible=hasPan;P.x=-18.4;P.z=10;P.lv=0;P.y=0;P.yaw=-Math.PI/2;P.pitch=0;gt=7*3600;lastH=7;anim.k='wake';anim.e=0;anim.dur=9.2;anim.txt='DAY '+Math.min(day,DAYS)+' — 7:00 AM';anim.sub=by?by+' dragged you back to bed...':'You wake up in your bed. Time to escape.'}
+function startDay(by){reset();G.position.set(sl.x,sl.lv*FH,sl.z);G.rotation.set(0,0,0);G.scale.setScalar(1);SP.position.set(sp.x,FH,sp.z);SP.rotation.set(0,0,0);SP.scale.setScalar(1);wp.visible=hasPan;P.x=-18.4;P.z=10;P.lv=0;P.y=0;P.yaw=-Math.PI/2;P.pitch=0;gt=7*3600;lastH=7;anim.k='wake';anim.e=0;anim.dur=9.2;anim.txt='DAY '+Math.min(day,DAYS)+' — 7:00 AM';anim.sub=by?by+' dragged you back to bed...':'You wake up in your bed. Time to escape.'}
 function sleepNow(){if(anim.k)return;hidden=null;seated=null;anim.k='sleep';anim.e=0;anim.dur=4.2;anim.txt='10:00 PM';anim.sub='You go back to sleep... Day '+day+' is over.'}
 function animStep(dt){anim.e+=dt;const e=anim.e;let eo,to;
 if(anim.k==='wake'){const o=lerpP(e,[[0,0],[1.4,0],[2.3,.1],[3.1,.03],[4,.3],[4.6,.15],[5.8,.6],[7,1]]);
@@ -429,8 +437,8 @@ wc.set(0x16224a).lerp(tmpC.set(0xa8d0f0),sun);winMeshes.forEach(m=>m.material.co
 function fmt(g){const h=Math.floor(g/3600)%24,m=Math.floor(g/60)%60,s=Math.floor(g)%60;return(h%12||12)+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+' '+(h>=12?'PM':'AM')}
 function phase(h){return h<12?'Morning':h<17?'Afternoon':h<20?'Evening':'Night'}
 function noiseAt(x,z,r,lv){if(sl.dead<=0&&sl.mode!=='chase'){const d=Math.hypot(sl.x-x,sl.z-z)*(1+Math.abs(sl.lv-lv)*.7);if(d<r)sl.lure={x,z,lv,t:7}}if(sp.dead<=0&&lv===1&&sp.mode!=='chase'&&Math.hypot(sp.x-x,sp.z-z)<r*1.1)sp.lure={x,z,t:6}}
-function creak(){const t=AC.currentTime,o=AC.createOscillator(),f=AC.createBiquadFilter(),g=AC.createGain(),b=110+Math.random()*60;o.type='sawtooth';o.frequency.setValueAtTime(b,t);o.frequency.linearRampToValueAtTime(b*1.6,t+.18);o.frequency.linearRampToValueAtTime(b*1.1,t+.4);f.type='bandpass';f.frequency.value=700;f.Q.value=4;g.gain.setValueAtTime(.001,t);g.gain.linearRampToValueAtTime(.25,t+.05);g.gain.exponentialRampToValueAtTime(.001,t+.45);o.connect(f);f.connect(g);g.connect(master);o.start(t);o.stop(t+.5)}
-function footstep(run){const creaky=P.lv>=0&&P.x<20.3&&Math.random()<(run?.6:.38);
+function creak(){const t=AC.currentTime,b=100+Math.random()*60,L=1.3;[1,2.01].forEach((m,k)=>{const o=AC.createOscillator(),f=AC.createBiquadFilter(),g=AC.createGain();o.type='sawtooth';o.frequency.setValueAtTime(b*m,t);o.frequency.linearRampToValueAtTime(b*m*1.7,t+.3);o.frequency.linearRampToValueAtTime(b*m*1.15,t+.7);o.frequency.linearRampToValueAtTime(b*m*1.4,t+L);f.type='bandpass';f.frequency.value=650+k*400;f.Q.value=5;g.gain.setValueAtTime(.001,t);g.gain.linearRampToValueAtTime(k?.35:.7,t+.06);g.gain.exponentialRampToValueAtTime(.001,t+L);o.connect(f);f.connect(g);g.connect(master);o.start(t);o.stop(t+L+.1)})}
+function footstep(run){const creaky=false;
 if(AC){const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();o.frequency.setValueAtTime(95,t);o.frequency.exponentialRampToValueAtTime(50,t+.09);g.gain.setValueAtTime(run?.22:.12,t);g.gain.exponentialRampToValueAtTime(.001,t+.12);o.connect(g);g.connect(master);o.start(t);o.stop(t+.13);if(creaky)creak()}
 if(creaky)creakT=1;noiseAt(P.x,P.z,creaky?(run?15:10):(run?7:3),P.lv)}
 // ---- functional TV (random slop) ----
@@ -449,7 +457,7 @@ for(let i=0;i<5;i++){g.fillStyle='hsl('+Math.random()*360+',100%,55%)';g.fillRec
 function tvNext(){tvAudio();if(!tvOn){tvOn=true;tvCh=0}else{tvCh++;if(tvCh>3){tvOn=false;tvCh=0}}tvM.color.set(tvOn?0xffffff:0x111111);tvN=3.5;drawTV(performance.now(),.08);tvT.needsUpdate=true;say(tvOn?['TV: static','TV: test pattern','TV: brain rot channel','TV: glitch channel'][tvCh]+' — the noise attracts '+NAME+'!':'TV off',3000)}
 function tvStep(t,dt){tvAcc+=dt;if(tvOn&&tvAcc>.08){tvAcc=0;drawTV(t,.08);tvT.needsUpdate=true}
 const vol=tvOn&&P.lv===0?Math.max(0,1-Math.hypot(P.x-19,P.z)/26):0;if(tvGain)tvGain.gain.value=vol*(tvCh===0?.12:.035);
-if(tvOn&&tvCh>=2&&AC&&vol>0&&!paused&&Math.random()<dt*5){const o=AC.createOscillator(),g=AC.createGain(),tt=AC.currentTime;o.type='square';o.frequency.value=200+Math.random()*1000;g.gain.setValueAtTime(.05*vol,tt);g.gain.exponentialRampToValueAtTime(.001,tt+.08);o.connect(g);g.connect(master);o.start(tt);o.stop(tt+.09)}
+if(false){const o=AC.createOscillator(),g=AC.createGain(),tt=AC.currentTime;o.type='square';o.frequency.value=200+Math.random()*1000;g.gain.setValueAtTime(.05*vol,tt);g.gain.exponentialRampToValueAtTime(.001,tt+.08);o.connect(g);g.connect(master);o.start(tt);o.stop(tt+.09)}
 if(tvOn&&!paused&&!anim.k){tvN+=dt;if(tvN>4){tvN=0;noiseAt(19,0,26,0)}}}
 let last=performance.now();
 function loop(t){requestAnimationFrame(loop);const dt=Math.min((t-last)/1000,.05);last=t;
@@ -464,20 +472,20 @@ if(!paused&&!over){
   crouching=!!keys.KeyC;const want=!crouching&&(keys.ShiftLeft||keys.ShiftRight)&&mv&&exh<=0&&sta>0;
   if(want){sta-=32*dt;if(sta<=0){sta=0;exh=10;say('Out of breath! Wait 10 seconds to sprint again.',3000)}}
   else if(exh>0){exh-=dt;if(exh<=0)sta=35}else sta=Math.min(100,sta+14*dt);
-  const sp2=(want?6.6:crouching?2:4)*dt,sy=Math.sin(P.yaw),cy=Math.cos(P.yaw);
+  const sp2=(want?5.8:crouching?1.8:3.5)*dt,sy=Math.sin(P.yaw),cy=Math.cos(P.yaw);
   const ox=P.x,oz=P.z;[P.x,P.z]=step(P.x,P.z,(-sy*f+cy*s)*sp2,(-cy*f-sy*s)*sp2,.4,P.lv);lvOf(P);stepAcc+=Math.hypot(P.x-ox,P.z-oz);if(stepAcc>=(want?1.5:1.15)){stepAcc=0;if(!crouching)footstep(want)}}
  else sta=Math.min(100,sta+(seated?32:14)*dt);
  // Slaughter
  let chasing=false;
- if(sl.dead>0){sl.dead-=dt;if(sl.dead<=0){sl.dead=0;G.visible=true;sl.x=-12;sl.z=-12;sl.lv=0;sl.wp=0;sl.dir=1;sl.alert=0;say(NAME+' is back!')}}
+ if(sl.dead>0){sl.dead-=dt;if(sl.dead<=0){sl.dead=0;G.visible=true;sl.x=-7.6;sl.z=4;sl.lv=1;sl.wp=8;sl.dir=1;sl.alert=0;say(NAME+' is back!')}}
  else{lvOf(sl);const same=sl.lv===P.lv,d=Math.hypot(P.x-sl.x,P.z-sl.z);
  if(sl.alert>0){sl.alert-=dt;sl.mode='chase'}else if(same&&d<(crouching?7:13)&&!hidden&&los(sl,P,sl.lv)){sl.mode='chase';sl.alert=2.5}else sl.mode='patrol';
  if(hidden&&sl.alert>0&&d>3)sl.alert=Math.min(sl.alert,1.5);
  let tx,tz,spd;
- if(sl.mode==='chase'){spd=4.1*NM;if(same){tx=P.x;tz=P.z}else{const c=chaseT(sl,P.lv,P.y);tx=c[0];tz=c[1]}}
- else if(sl.lure&&sl.lure.t>0){const L=sl.lure;L.t-=dt;spd=2.5*NM;if(sl.lv===L.lv){tx=L.x;tz=L.z;if(Math.hypot(sl.x-L.x,sl.z-L.z)<1.2){spd=0;L.t-=dt*2}}else{const c=chaseT(sl,L.lv,L.lv*FH);tx=c[0];tz=c[1]}}
- else if(sl.lv===-1||downH(sl.x,sl.z)!=null){const c=downH(sl.x,sl.z)!=null?[-3.05,8]:[-3.05,17.6];tx=c[0];tz=c[1];spd=2.3*NM}
- else{const w=patrol(sl,route);tx=w[0];tz=w[1];spd=2.0*NM}
+ if(sl.mode==='chase'){spd=2.67*NM;if(same){tx=P.x;tz=P.z}else{const c=chaseT(sl,P.lv,P.y);tx=c[0];tz=c[1]}}
+ else if(sl.lure&&sl.lure.t>0){const L=sl.lure;L.t-=dt;spd=1.63*NM;if(sl.lv===L.lv){tx=L.x;tz=L.z;if(Math.hypot(sl.x-L.x,sl.z-L.z)<1.2){spd=0;L.t-=dt*2}}else{const c=chaseT(sl,L.lv,L.lv*FH);tx=c[0];tz=c[1]}}
+ else if(sl.lv===-1||downH(sl.x,sl.z)!=null){const c=downH(sl.x,sl.z)!=null?[-3.05,8]:[-3.05,17.6];tx=c[0];tz=c[1];spd=1.5*NM}
+ else{const w=patrol(sl,route);tx=w[0];tz=w[1];spd=1.3*NM}
  move(sl,tx,tz,spd,dt,sl.lv,.5);lvOf(sl);G.position.set(sl.x,sl.y,sl.z);G.rotation.y=Math.atan2(tx-sl.x,tz-sl.z);bat.rotation.x=Math.sin(t/150)*(sl.mode==='chase'?.6:.1);
  if(sl.mode==='chase'&&same)chasing=true;
  if(same&&d<(hidden?1.8:1.1)){scare(NAME);return}}
@@ -485,7 +493,7 @@ if(!paused&&!over){
  if(sp.dead>0){sp.dead-=dt;if(sp.dead<=0){sp.dead=0;SP.visible=true;sp.x=16;sp.z=-8;sp.wp=0;sp.dir=1;sp.alert=0;say(SPIDER+' is back!')}}
  else{const ds=Math.hypot(P.x-sp.x,P.z-sp.z),sa=P.lv===1;
  if(sp.alert>0&&sa){sp.alert-=dt;sp.mode='chase'}else if(sa&&ds<(crouching?6:11)&&!hidden&&los(sp,P,1)){sp.mode='chase';sp.alert=2}else sp.mode='patrol';
- let sx,sz,ss;if(sp.mode==='chase'){sx=P.x;sz=P.z;ss=4.4*NM;chasing=true}else if(sp.lure&&sp.lure.t>0){sp.lure.t-=dt;sx=sp.lure.x;sz=sp.lure.z;ss=3*NM;if(Math.hypot(sp.x-sx,sp.z-sz)<1)sp.lure.t=0}else{const w=patrol(sp,sroute);sx=w[0];sz=w[1];ss=2.4*NM}
+ let sx,sz,ss;if(sp.mode==='chase'){sx=P.x;sz=P.z;ss=1.98*NM;chasing=true}else if(sp.lure&&sp.lure.t>0){sp.lure.t-=dt;sx=sp.lure.x;sz=sp.lure.z;ss=1.35*NM;if(Math.hypot(sp.x-sx,sp.z-sz)<1)sp.lure.t=0}else{const w=patrol(sp,sroute);sx=w[0];sz=w[1];ss=1.08*NM}
  move(sp,sx,sz,ss,dt,1,.4);SP.position.set(sp.x,FH,sp.z);SP.rotation.y=Math.atan2(sx-sp.x,sz-sp.z);
  if(sa&&ds<.9&&!hidden){scare(SPIDER);return}}
  if(chasing){hb-=dt;if(hb<=0){thump();hb=.6}}
@@ -498,11 +506,11 @@ if(!paused&&!over){
  if(hint)m.textContent=hint;else if(/^Press E/.test(m.textContent))m.textContent='';
  if(open.front&&P.z<-21.5||winOpen&&P.x<-21.5||open.back&&P.x>33.3)end(true);
  }}
-if(menuOn){const mt=t/1000;cam.position.set(Math.sin(mt*.4)*.5+(Math.random()-.5)*.012,1.55,-22+Math.sin(mt*.12)*1.2);cam.rotation.set(-.02,Math.sin(mt*.3)*.04,0);G.scale.setScalar(1.25);SP.scale.setScalar(1.35);G.position.set(-1.5,Math.sin(mt*1.6)*.03,-27);G.rotation.y=.12;SP.position.set(1.7,Math.sin(mt*1.3+1)*.03,-27);SP.rotation.y=-.12;torch.color.set(0xff3322);torch.intensity=1.5+Math.random()*1.3}
+if(menuOn){const mt=t/1000;cam.position.set(Math.sin(mt*.4)*.4+(Math.random()-.5)*.012,1.9,-22+Math.sin(mt*.12)*.8);cam.rotation.set(0,Math.sin(mt*.3)*.03,0);G.visible=true;SP.visible=true;G.scale.setScalar(1.25);SP.scale.setScalar(1.3);G.position.set(-1.5,Math.sin(mt*1.6)*.03,-26);G.rotation.set(0,.12,0);SP.position.set(1.8,Math.sin(mt*1.3+1)*.03,-26);SP.rotation.set(0,-.12,0);torch.color.set(0xff4433);torch.intensity=1.8+Math.random()*1.2}
 if(menuOn){}else if(anim.k==='wake'||anim.k==='scare'){cam.position.set(ac.x,ac.y,ac.z);cam.rotation.set(ac.pitch,P.yaw,ac.roll,'YXZ')}else{cam.position.set(P.x,P.y+(hidden?(hidden.h||1.2):seated?(seated.h||1.15):crouching?1.05:1.6),P.z);cam.rotation.set(P.pitch,P.yaw,0,'YXZ')}
 $('barf').style.width=sta+'%';$('barf').style.background=exh>0?'#c33':'#4c8';
 $('hud').innerHTML=`Keys ${got}/${TOTAL} · Pan ${hasPan?'✔ (F)':'🔒'} · ${['Basement','Ground floor','Upstairs'][P.lv+1]}${creakT>0?' · <b style="color:#fc6">*CREAK*</b>':''}`+(exh>0?` · <b style="color:#f88">Exhausted ${Math.ceil(exh)}s</b>`:'')+(sl.dead>0?`<br>${NAME} respawns in ${Math.ceil(sl.dead)}s`:'')+(sp.dead>0?`<br>${SPIDER} respawns in ${Math.ceil(sp.dead)}s`:'')+(sl.mode==='chase'&&sl.dead<=0?'<br><b style="color:#f55">'+NAME+' is hunting you!</b>':'')+(sp.mode==='chase'&&sp.dead<=0&&P.lv===1?'<br><b style="color:#f55">'+SPIDER+'!</b>':'');
-musicStep(dt);sky();if(menuOn){moonB.position.set(-15,15,-46);moonB.material.color.set(0xff5544);S.fog.density=.085;skyC.set(0x0b0509);S.fog.color.copy(skyC)}fireL.intensity=.8+Math.random()*.4;tvStep(t,dt);hH.rotation.z=-(gt/3600%12)/12*Math.PI*2;mH.rotation.z=-(gt/60%60)/60*Math.PI*2;
+musicStep(dt);sky();if(menuOn){moonB.position.set(-15,15,-46);moonB.material.color.set(0xff5544);S.fog.density=.065;amb.intensity=1.15;skyC.set(0x0b0509);S.fog.color.copy(skyC)}fireL.intensity=.8+Math.random()*.4;tvStep(t,dt);hH.rotation.z=-(gt/3600%12)/12*Math.PI*2;mH.rotation.z=-(gt/60%60)/60*Math.PI*2;
 $('clock').innerHTML=`<div style="font-size:26px;letter-spacing:2px">${fmt(gt)}</div><div style="font-family:Cinzel,serif;font-size:13px;opacity:.85">DAY ${Math.min(day,DAYS)} OF ${DAYS} · ${phase(gt/3600).toUpperCase()}</div>`;
 R.render(S,cam)}
 requestAnimationFrame(loop);
